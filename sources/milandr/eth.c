@@ -27,6 +27,10 @@
 #define ETH_FIFO
 #define ETH_INTERRUPT
 
+#define ETH_ERROR_OK			 0
+#define ETH_ERROR_CLOCK_INIT	-1
+#define ETH_ERROR_PHY_RESET		-2
+
 //*** Функция для очистки буферов приемника и передатчика MAC модуля ***
 //Буфер приемника 4096 байт
 //Буфер передатчика 4096 байт
@@ -41,21 +45,51 @@ static void ClearEthFIFO() {
 /*
  * Set default values to Ethernet controller registers.
  */
-static void chip_init(eth_t *u) {
-	/* Setup Clok */
-	ARM_RSTCLK->PER_CLOCK |= ARM_PER_CLOCK_GPIOD | ARM_PER_CLOCK_GPIOB;
-	ARM_RSTCLK->HS_CONTROL |= ARM_HS_CONTROL_HSE2_ON;
-	while ((ARM_RSTCLK->CLOCK_STATUS & 0xC) != 0xC)
-		;
+static int chip_init(eth_t *u) {
+	int i, j;
+	volatile int counter;
+	int flag = 0;
+	uint32_t value;
+	/* Leds */
 
-	ARM_RSTCLK->ETH_CLOCK = ARM_ETH_CLOCK_ETH_EN | ARM_ETH_CLOCK_PHY_EN
-			| ARM_ETH_CLOCK_PHY_SEL(ARM_ETH_CLOCK_PHY_SEL_HSE2);
+	/* Setup Cloсk */
+	ARM_RSTCLK->HS_CONTROL |= ARM_HS_CONTROL_HSE2_ON;
+
+	for (j=0;j<KHZ*20/6;j++) {
+		counter++; // ~20ms
+	}
+
+	i = 0;
+	value = ARM_RSTCLK->CLOCK_STATUS;
+	while ((value & 0xC) != 0xC) {
+		debug_printf("%03d. ARM_RSTCLK->CLOCK_STATUS = %x\n", i, value);
+		counter = 0;
+		for (j=0;j<KHZ*100/6;j++) {
+			counter++; // ~100ms
+		}
+
+		if (100 < i++) {
+			return ETH_ERROR_CLOCK_INIT;
+		}
+		flag = 1;
+		value = ARM_RSTCLK->CLOCK_STATUS;
+	}
+
+	if (flag) {
+		debug_printf("%03d. ARM_RSTCLK->CLOCK_STATUS = %x\n", i, value);
+		flag = 0;
+	}
+
+
+	ARM_RSTCLK->ETH_CLOCK = ARM_ETH_CLOCK_ETH_EN | ARM_ETH_CLOCK_PHY_EN	| ARM_ETH_CLOCK_PHY_SEL(ARM_ETH_CLOCK_PHY_SEL_HSE2);
 
 	/* Светодиоды */
 	/* Green led PB15
 	 * Yellow led PB14
 	 */
-	/*ARM_GPIOB->FUNC = (ARM_GPIOB->FUNC
+	/*
+	 ARM_RSTCLK->PER_CLOCK |= ARM_PER_CLOCK_GPIOD | ARM_PER_CLOCK_GPIOB;
+	 ARM_GPIOB->FUNC = (ARM_GPIOB->FUNC
 			& ~( ARM_FUNC_MASK(14) | ARM_FUNC_MASK(15)))
 			| (ARM_FUNC_PORT(14) | ARM_FUNC_PORT(15));
 	ARM_GPIOB->ANALOG |= ARM_DIGITAL(14) | ARM_DIGITAL(15);
@@ -65,11 +99,35 @@ static void chip_init(eth_t *u) {
 			| (ARM_PWR_FASTEST(14) | ARM_PWR_FASTEST(15));
         */
 	/* Phy init */
-	ARM_ETH->PHY_CTRL =
-	ARM_ETH_PHY_ADDR(
-			0x0) | ARM_ETH_PHY_MODE(ARM_ETH_PHY_FULL_AUTO) | ARM_ETH_PHY_NRST;
-	while ((ARM_ETH->PHY_STAT & 0x10) == 0)
+	ARM_ETH->PHY_CTRL = 0;
+#ifdef SET_ARM_ETH_PHY_MODE
+	ARM_ETH->PHY_CTRL =	ARM_ETH_PHY_ADDR(0x0) | ARM_ETH_PHY_MODE(SET_ARM_ETH_PHY_MODE) | ARM_ETH_PHY_NRST;
+#else
+	ARM_ETH->PHY_CTRL =	ARM_ETH_PHY_ADDR(0x0) | ARM_ETH_PHY_MODE(ARM_ETH_PHY_FULL_AUTO) | ARM_ETH_PHY_NRST;
+#endif
+
+	for (j=0;j<KHZ*20/6;j++) {
+		counter++; // ~20ms по даташиту выход на рабочий режим через 16ms
+	}
+	i = 0;
+	value = ARM_ETH->PHY_STAT;
+	while ((value & 0x10) == 0) {
+		debug_printf("%03d. ARM_ETH->PHY_STAT = %x\n", i, value);
 		;	//ждем пока модуль в состоянии сброса
+		counter = 0;
+		for (j=0;j<KHZ*1000/6;j++) {
+			counter++; // ~1000ms
+		}
+
+		if (1000 < i++) {
+			return ETH_ERROR_PHY_RESET;
+		}
+		flag = 1;
+		value = ARM_ETH->PHY_STAT;
+	}
+	if (flag) {
+		debug_printf("%03d. ARM_ETH->PHY_STAT = %x\n", i, value);
+	}
 
 	//* MAC */
 	ARM_ETH->MAC_ADDR[0] = u->netif.ethaddr[0];
@@ -125,6 +183,8 @@ static void chip_init(eth_t *u) {
 
 	ARM_ETH->R_CFG |= ARM_ETH_EN;
 	ARM_ETH->X_CFG |= ARM_ETH_EN;
+
+	return ETH_ERROR_OK;
 }
 
 void eth_debug(eth_t *u, struct _stream_t *stream) {
@@ -234,6 +294,7 @@ void eth_set_promisc(eth_t *u, int station, int group) {
  * Deallocate the packet.
  */
 static void transmit_packet(eth_t *u, buf_t *p) {
+
 	/* Send the data from the buf chain to the interface,
 	 * one buf at a time. The size of the data in each
 	 * buf is kept in the ->len variable. */
@@ -393,16 +454,16 @@ static bool_t eth_output(eth_t *u, buf_t *p, small_uint_t prio) {
 	}
 
 	/* Занято, ставим в очередь. */
-	/*if (buf_queue_is_full(&u->outq)) {
+	if (buf_queue_is_full(&u->outq)) {
 	 // Нет места в очереди: теряем пакет.
 	 ++u->netif.out_discards;
 	 ++u->out_full_buf;
 	 mutex_unlock(&u->netif.lock);
 	 buf_free(p);
 	 return 0;
-	 }*/
-	while (buf_queue_is_full(&u->outq))
-		asm volatile ("nop;");
+	 }
+	//while (buf_queue_is_full(&u->outq)) // можем навечно тут зависнуть Pavel
+	//	asm volatile ("nop;");
 	buf_queue_put(&u->outq, p);
 	mutex_unlock(&u->netif.lock);
 	return 1;
@@ -468,8 +529,6 @@ static void receive_packet(eth_t *u) {
 	if (sizeBytes - 4 > ETH_MTU) {
 		++u->netif.in_errors;
 		++u->in_discards_len_packet;
-		debug_printf("receive_data: bad status 0x%04X\tbytes = %d\n",
-				Rx_Stat >> 16, sizeBytes);
 		ARM_ETH->STAT = 0;
 		return;
 	}
@@ -478,22 +537,15 @@ static void receive_packet(eth_t *u) {
 		*dst++ = ARM_ETH_RX_FIFO;
 	}
 	ARM_ETH->STAT = 0;
-	if (Rx_Stat
-			& (ARM_ETH_PKT_SMB_ERR | ARM_ETH_PKT_CRC_ERR | ARM_ETH_PKT_DN_ERR
-					| ARM_ETH_PKT_LF_ERR)) {
-		debug_printf("Error  %d, size = %d\n", Rx_Stat >> 16, sizeBytes);
+	if (Rx_Stat	& (ARM_ETH_PKT_SMB_ERR | ARM_ETH_PKT_CRC_ERR | ARM_ETH_PKT_DN_ERR | ARM_ETH_PKT_LF_ERR)) {
 		++u->netif.in_errors;
 		return;
 	}
-
-	/* debug_printf("Recive packet \tRx_stat = 0x%08x; \tbytes = %d \t buf = %d\n",
-	 Rx_Stat, ARM_ETH_PKT_LENGTH(Rx_Stat), size); */
 
 	++u->netif.in_packets;
 	u->netif.in_bytes += sizeBytes;
 
 	if (buf_queue_is_full(&u->inq)) {
-		/*debug_printf("receive_data: input overflow\n");*/
 		++u->netif.in_discards;
 		++u->in_discards_full_buff;
 		return;
@@ -501,19 +553,11 @@ static void receive_packet(eth_t *u) {
 
 	buf_t *p = buf_alloc(u->pool, sizeBytes, 4); /* выделить фактически места */
 	if (!p) {
-		/*debug_printf("receive_data: ignore packet - out of memory\n");*/
 		++u->netif.in_discards;
 		++u->in_discards_full_buff;
 		return;
 	}
-	//dst = (unsigned *) &p->payload[0];
-	//unsigned *src = (unsigned *) &u->rxbuf_data[0];
-	//for(i = 0; i < sizeWords; i++)
-	//	*dst++ = *src++;
 	memcpy(p->payload, u->rxbuf, sizeBytes);
-	/*for (i = 0; i < sizeBytes; i++)
-	 debug_printf("<%02X> ", p->payload[i]);
-	 debug_printf("\n");*/
 	buf_queue_put(&u->inq, p);
 
 #else
@@ -635,7 +679,12 @@ static unsigned handle_interrupt(eth_t *u) {
 		ARM_ETH->R_CFG |= ARM_ETH_EN;
 	}
 	/* Обработка приёма пакета */
-	if (u->intr_flags & ARM_ETH_RF_OK) {
+	//if (ARM_ETH->X_TAIL != ARM_ETH->X_HEAD) {
+	//	/* Если есть данные, прочитать пакет */
+	//	receive_packet(u);
+	//	active++;
+	//}
+	if (ARM_ETH->R_TAIL != ARM_ETH->R_HEAD) {
 		/* Если есть данные, прочитать пакет */
 		while (ARM_ETH->STAT & 0xE0) {
 			receive_packet(u);
@@ -736,11 +785,11 @@ void eth_init(eth_t *u, const char *name, int prio, mem_pool_t *pool,
 	u->netif.arp = arp;
 	u->netif.mtu = ETH_MTU;
 	u->netif.type = NETIF_ETHERNET_CSMACD;
-	u->netif.bps = 1000000;
+	u->netif.bps = 100000;
 	memcpy(&u->netif.ethaddr, macaddr, 6);
 
 	u->pool = pool;
-	u->rxbuf = (unsigned char*) ((unsigned) u->rxbuf_data);
+	u->rxbuf = (unsigned char*) ((unsigned) (u->rxbuf_data + 7) & ~7);
 	u->txbuf = (unsigned char*) ((unsigned) (u->txbuf_data + 7) & ~7);
 	u->rxbuf_physaddr = (unsigned) u->rxbuf;
 	u->txbuf_physaddr = (unsigned) u->txbuf;
@@ -761,7 +810,22 @@ void eth_init(eth_t *u, const char *name, int prio, mem_pool_t *pool,
 	 debug_printf("*dst = 0x%08X (0x%08X)\n", *dst, dst);
 	 */
 	/* Initialize hardware. */
-	chip_init(u);
+	int ret;
+	ret = chip_init(u);
+	if (ret != ETH_ERROR_OK) {
+		switch(ret) {
+		case ETH_ERROR_CLOCK_INIT:
+			debug_printf("\nETH_ERROR_CLOCK_INIT\n");
+			break;
+		case ETH_ERROR_PHY_RESET:
+			debug_printf("\nETH_ERROR_PHY_RESET\n");
+			break;
+		default:
+			debug_printf("\nETH_ERROR UNDEFINED\n");
+			break;
+		}
+		uos_halt (0);
+	}
 
 	/* Create interrupt task. */
 	u->task_eth_handler = task_create(interrupt_task, u, "eth", prio, u->stack,

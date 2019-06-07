@@ -79,7 +79,7 @@
 #define SVP_AAR     (1 << 11)   /* разрешение автоматического перезапуска узла */
 #define SVP_DBEN    (1 << 12)   /* включение режима двойной буферизации */
 #define SVP_LC(n)   ((n) << 13) /* количество циклов подряд - 1, в которых
-                                   AVEC=0, после которых в GSR выставляется
+                                   RVEC=0, после которых в GSR выставляется
                                    признак SVP_GSR_CONL */
 
 /*
@@ -191,7 +191,8 @@
 #define SVP_BDR     SVP_REG_ADDR (0x3c)
 
 #define SVP_BDR_NDIV(x) ((x) & 0xF)         /* Делитель */
-#define SVP_BDR_TDC(x)  (((x) & 0x1F) << 4) /* Компенсация задержек */
+#define SVP_BDR_AUTOSW  (1 << 4)            /* Разрешение определения скорости передачи в приёмнике */
+#define SVP_BDR_TDC(x)  (((x) & 0x1F) << 8) /* Компенсация задержек */
 
 /*
  * SPDR - start packet delay register, 32 R/W

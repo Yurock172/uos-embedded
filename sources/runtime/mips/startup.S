@@ -46,7 +46,15 @@
 		.org	0
 _reset_vector_:	.globl	_reset_vector_
 
-		.extern	_init_
+		.extern	_init
+
+		# запрет прерываний.
+		mfc0    $a0, $C0_STATUS         # Get SR
+		nop
+		li      $k0, -1 - ST_IE         # Prepare bitmask
+		and     $k0, $a0                # Clear IE bit
+		mtc0    $k0, $C0_STATUS         # Put SR back
+
 		la	$sp, _estack			# Stack at end of internal SRAM
 #if 1
 		lui	$gp, 0xb840			# Set global pointer
@@ -292,5 +300,6 @@ _interrupt_vector_: .globl _interrupt_vector_
 
 		.extern _irq_handler_
 		lui	$gp, RAM_HI			# Set global pointer
+                move    $fp, $sp
 		j	_irq_handler_			# Jump to C code, no return
 		nop
