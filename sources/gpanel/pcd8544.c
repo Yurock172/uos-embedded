@@ -6,6 +6,32 @@
 #include <stream/stream.h>
 #include <gpanel/gpanel.h>
 
+#ifdef LCD_SPI
+#ifdef ARM_STM32F10x
+#include <stm32f10x/spi.h>
+#endif
+#ifdef ARM_STM32F4
+#include <stm32f4/spi.h>
+#endif
+
+#ifdef ARM_STM32F10x
+stm32_spim_t spi;
+#endif
+
+#ifdef ARM_STM32F4
+stm32f4_spim_t spi;
+#endif
+
+spimif_t *spimif;
+spi_message_t msg;
+uint8_t spiCh;
+
+#if !defined(LCD_DC) || !defined(LCD_BL) || !defined(LCD_RST)
+#   error "LCD pins  and ports is not assigned in CFLAGS of target.cfg"
+#endif
+
+#endif
+
 /*
  * Pinout for SainSmart Graphic LCD4884 Shield.
  */
@@ -35,16 +61,24 @@ static unsigned char gpanel_screen [MAXROW*MAXCOL/8];
 static inline void lcd_cs (unsigned on)
 {
     if (on) {
+#ifdef LCD_SPI
+
+#else
 #ifdef MASKC_LCD_CS
         LATCSET = MASKC_LCD_CS;
 #else
         LATBSET = MASKB_LCD_CS;
 #endif
+#endif
     } else {
+#ifdef LCD_SPI
+
+#else
 #ifdef MASKC_LCD_CS
         LATCCLR = MASKC_LCD_CS;
 #else
         LATBCLR = MASKB_LCD_CS;
+#endif
 #endif
     }
 }
@@ -52,16 +86,24 @@ static inline void lcd_cs (unsigned on)
 static inline void lcd_rst (unsigned on)
 {
     if (on) {
+#ifdef LCD_RST
+    	LCD_RST_PORT->BSRR = GPIO_SET(PIN(LCD_RST));
+#else
 #ifdef MASKC_LCD_RST
         LATCSET = MASKC_LCD_RST;
 #else
         LATBSET = MASKB_LCD_RST;
 #endif
+#endif
     } else {
+#ifdef LCD_RST
+    	LCD_RST_PORT->BSRR = GPIO_RESET(PIN(LCD_RST));
+#else
 #ifdef MASKC_LCD_RST
         LATCCLR = MASKC_LCD_RST;
 #else
         LATBCLR = MASKB_LCD_RST;
+#endif
 #endif
     }
 }
@@ -69,16 +111,24 @@ static inline void lcd_rst (unsigned on)
 static inline void lcd_dc (unsigned on)
 {
     if (on) {
+#ifdef LCD_DC
+    	LCD_DC_PORT->BSRR = GPIO_SET(PIN(LCD_DC));
+#else
 #ifdef MASKC_LCD_DC
         LATCSET = MASKC_LCD_DC;
 #else
         LATASET = MASKA_LCD_DC;
 #endif
+#endif
     } else {
+#ifdef LCD_DC
+    	LCD_DC_PORT->BSRR = GPIO_RESET(PIN(LCD_DC));
+#else
 #ifdef MASKC_LCD_DC
         LATCCLR = MASKC_LCD_DC;
 #else
         LATACLR = MASKA_LCD_DC;
+#endif
 #endif
     }
 }
@@ -86,22 +136,31 @@ static inline void lcd_dc (unsigned on)
 static inline void lcd_bl (unsigned on)
 {
     if (on) {
+#ifdef LCD_BL
+    	LCD_BL_PORT->BSRR = GPIO_SET(PIN(LCD_BL));
+#else
 #ifdef MASKC_LCD_BL
         LATCSET = MASKC_LCD_BL;
 #else
         LATASET = MASKA_LCD_BL;
 #endif
+#endif
     } else {
+#ifdef LCD_BL
+    	LCD_BL_PORT->BSRR = GPIO_RESET(PIN(LCD_BL));
+#else
 #ifdef MASKC_LCD_BL
         LATCCLR = MASKC_LCD_BL;
 #else
         LATACLR = MASKA_LCD_BL;
+#endif
 #endif
     }
 }
 
 static inline void lcd_mosi (unsigned on)
 {
+#ifndef LCD_SPI
     if (on) {
 #ifdef MASKC_LCD_MOSI
         LATCSET = MASKC_LCD_MOSI;
@@ -115,10 +174,14 @@ static inline void lcd_mosi (unsigned on)
         LATBCLR = MASKB_LCD_MOSI;
 #endif
     }
+#else
+    (void) on;
+#endif
 }
 
 static inline void lcd_sck (unsigned on)
 {
+#ifndef LCD_SPI
     if (on) {
 #ifdef MASKC_LCD_SCK
         LATCSET = MASKC_LCD_SCK;
@@ -132,10 +195,21 @@ static inline void lcd_sck (unsigned on)
         LATBCLR = MASKB_LCD_SCK;
 #endif
     }
+#else
+    (void) on;
+#endif
+
 }
 
 static void lcd_write (unsigned byte, unsigned data_flag)
 {
+#ifdef LCD_SPI
+	lcd_dc (data_flag);
+	spiCh = byte;
+	msg.word_count = 1;
+	msg.tx_data = &spiCh;
+	spimif->trx(&spi.spimif, &msg);
+#else
     unsigned i;
 
     lcd_cs (0);
@@ -146,6 +220,7 @@ static void lcd_write (unsigned byte, unsigned data_flag)
         lcd_sck (1);                    /* SCLK = 1 */
     }
     lcd_cs (1);
+#endif
 }
 
 /*
@@ -163,10 +238,24 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
     /* Clear data */
     lcd_write (0x40, 0);
     lcd_write (0x80, 0);
+#ifdef LCD_SPI
+    for (i=0; i<MAXROW*MAXCOL/8; i++) {
+    	gpanel_screen[i] = color;
+    	lcd_write (color, 1);
+    }
+//    msg.tx_data = gpanel_screen;
+//    msg.word_count = MAXROW*MAXCOL/8;
+//    spimif->trx(&spi.spimif, &msg);
+//
+//    msg.tx_data = &spiCh;
+//    msg.word_count = MAXROW*MAXCOL/8;
+
+#else
     for (i=0; i<MAXROW*MAXCOL/8; i++) {
         gpanel_screen[i] = color;
         lcd_write (color, 1);
     }
+#endif
     gp->row = 0;
     gp->col = 0;
 }
@@ -208,6 +297,34 @@ void gpanel_init (gpanel_t *gp, const gpanel_font_t *font)
                MASKB_LCD_CS  | MASKB_LCD_RST;
 #endif
 
+#ifdef LCD_SPI
+
+#ifdef ARM_STM32F4
+
+//    gpio_bl->CR[PIN(LCD_BL)>>3] = (gpio_bl->CR[PIN(LCD_BL)>>3] & ~GPIO_MASK(PIN(LCD_BL))) | GPIO_OUT_PP_10MHz(PIN(LCD_BL));
+//
+//    gpio_dc->CR[PIN(LCD_DC)>>3] = (gpio_dc->CR[PIN(LCD_DC)>>3] & ~GPIO_MASK(PIN(LCD_DC))) | GPIO_OUT_PP_10MHz(PIN(LCD_DC));
+//    gpio_rst->CR[PIN(LCD_RST)>>3] = (gpio_rst->CR[PIN(LCD_RST)>>3] & ~GPIO_MASK(PIN(LCD_RST))) | GPIO_OUT_PP_10MHz(PIN(LCD_RST));
+
+
+//    stm32f4_config_pin(gpio_bl, LCD_BL, SET_CONFIG_MODER(GPIO_MODER_OUT) |
+//    		                            SET_CONFIG_OTYPER(GPIO_OTYPER_PP) | SET_CONFIG_OSPEEDR(GPIO_OSPEEDR_50MHz) |
+//			                            SET_CONFIG_PUPDR(GPIO_PUPDR_NO_PULL) );
+//    stm32f4_config_pin(gpio_dc, LCD_DC, GPIO_MODER_OUT   | GPIO_OTYPER_PP | GPIO_50MHz(0) | GPIO_NO_PULL(0) | GPIO_RESET(0));
+//    stm32f4_config_pin(gpio_rst, LCD_RST, GPIO_MODER_OUT | GPIO_OTYPER_PP | GPIO_50MHz(0) | GPIO_NO_PULL(0) | GPIO_RESET(0));
+
+
+
+    stm32f4_spi_init(&spi, LCD_SPI, 0);
+#endif
+
+    msg.tx_data = &spiCh;
+    msg.mode = SPI_MODE_CPOL | SPI_MODE_CPHA | SPI_MODE_NB_BITS(8);
+    msg.freq = 3000000;
+    msg.word_count = 1;
+    spimif = (spimif_t*)&spi.spimif;
+#endif
+
     /* Turn off backlight. */
     lcd_bl (0);
 
@@ -223,6 +340,8 @@ void gpanel_init (gpanel_t *gp, const gpanel_font_t *font)
     lcd_write (0x14, 0);    // Set bias to 4
     lcd_write (0x20, 0);    // Back to normal instruction set
     lcd_write (0x0c, 0);    // Set normal mode
+
+//    lcd_write (0x0b, 0);    // Set display configuration
 }
 
 /*
@@ -242,6 +361,7 @@ void gpanel_pixel (gpanel_t *gp, int x, int y, int color)
     else
         *data &= ~(1 << (y & 7));
 
+    // ToDo В старой версии я эти строки коментировал и обновлял экран сразу весь
     lcd_write (0x40 | (y >> 3), 0);
     lcd_write (0x80 | x, 0);
     lcd_write (*data, 1);

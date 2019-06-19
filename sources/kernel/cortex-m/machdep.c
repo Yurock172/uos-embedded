@@ -129,6 +129,7 @@ _irq_handler_ (void)
 			extern void stm32l_init_sysclk();
 			stm32l_init_sysclk();
 		}
+		PWR->CR &= ~PWR_LPRUN;
         PWR->CR |= PWR_CWUF;
 #	endif
 #endif

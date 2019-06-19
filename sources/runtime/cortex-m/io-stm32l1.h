@@ -978,6 +978,9 @@ typedef struct
 #define ADC_SMP_192CYCLES(n)    (6 << (3 * (n%10)))
 #define ADC_SMP_384CYCLES(n)    (7 << (3 * (n%10)))
 
+
+
+
 // ADC_SQR1
 #define ADC_L(n)                ((n) << 20)
 #define ADC_SQ28(n)             ((n) << 15)

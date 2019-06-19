@@ -80,7 +80,7 @@ void stm32l_low_power()
     RCC->CSR &= ~RCC_LSION;
     
     while (PWR->CSR & PWR_VOSF);
-    PWR->CR = (PWR->CR & ~PWR_VOS_MASK) | PWR_VOS_1_2 | PWR_ULP | PWR_LPSDSR;
+    PWR->CR = (PWR->CR & ~PWR_VOS_MASK) | PWR_VOS_1_8 | PWR_ULP | PWR_LPSDSR | PWR_FWU;
     while (PWR->CSR & PWR_VOSF);
 }
 
@@ -122,7 +122,7 @@ void stm32l_init_sysclk()
 
     RCC->CR |= RCC_HSEON;
     while (! (RCC->CR & RCC_HSERDY));
-	
+
 #if KHZ_HSE==2000
     RCC->CFGR = RCC_PLLSRC_HSE | RCC_PLLMUL48 | RCC_PLLDIV3;
 #elif KHZ_HSE==4000
@@ -145,10 +145,9 @@ void stm32l_init_sysclk()
 
     RCC->CR |= RCC_PLLON;
     while (! (RCC->CR & RCC_PLLRDY));
-    
+
     RCC->CFGR |= RCC_SW_PLL;
     while ((RCC->CFGR & RCC_SWS_MASK) != RCC_SWS_PLL);
-
     RCC->CR &= ~RCC_MSION;
 
 #else 	// MSI clock source
@@ -199,13 +198,18 @@ _init_ (void)
 {
 // Disable interrupts
 	arm_set_basepri (64);
-
 #ifdef POWER_SAVE
+//#ifndef SLEEP_NOW
     stm32l_low_power();
     stm32l_disable_bor();
+//    PWR->CR = PWR_LPRUN | PWR_LPSDSR | PWR_ULP;
+//#endif
 #endif
-
+//#ifdef LOW_PWR_RAN
+//    PWR->CR |= PWR_LPRUN;
+//#endif
     stm32l_init_sysclk();
+//    GPIOA->BSRR = 1 << 6;
 
     // Init debug UART    
 #ifndef NDEBUG
@@ -258,7 +262,6 @@ _init_ (void)
     int i;
     for (i = 0; i < (ARCH_INTERRUPTS + 3) / 4; ++i)
         ARM_NVIC_IPR(i) = 0x40404040;
-
 	main ();
 }
 
