@@ -19,6 +19,9 @@
 #ifndef __SPI_MASTER_INTERFACE_H__
 #define __SPI_MASTER_INTERFACE_H__
 
+#include <kernel/uos.h>
+#include <runtime/lib.h>
+
 //
 //        Интерфейс драйвера контроллера SPI в режиме "Мастер"
 //

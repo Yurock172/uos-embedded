@@ -32,10 +32,12 @@ typedef volatile unsigned int arm_reg_t;
 
 
 #define ARM_SRAM_BASE       0x20000000  // Internal static memory
+#define ARM_CCRAM_BASE      0x10000000  // Internal ccm memory
 #define ARM_PERIPH_BASE     0x40000000  // Peripheral registers
 #define ARM_SYSTEM_BASE     0xE0000000  // Core registers
 
-#define ARM_SRAM_SIZE       (192*1024)   // Internal SRAM size
+#define ARM_SRAM_SIZE       (128*1024)   // Internal SRAM size
+#define ARM_CCRAM_SIZE      (64*1024)   // Internal CCM RAM size
 
 #include <runtime/cortex-m/io-cortex-m.h>
 
@@ -924,6 +926,8 @@ typedef struct
 #define GPIO_NO_PULL(n)   (0 << (2 * n))  // No pull-up, no pull-down
 #define GPIO_PULL_UP(n)   (1 << (2 * n))  // Pull-up
 #define GPIO_PULL_DOWN(n) (2 << (2 * n))  // Pull-down
+#define GPIO_PULL_MASK(n) (2 << (2 * (n)))  // Reset
+
 
 // BSRR bits
 #define GPIO_SET(n)     (1 << (n))      // Atomic set n-th bit of ODR
@@ -1931,4 +1935,603 @@ typedef struct
 
 // FA1R bits
 #define CAN_FACT(n)         (1 << (n))
+
+
+
+
+/*------------------------------------------------------------------------
+ * Макроопределения для возможности указания привязки сигналов к контактам
+ * из target.cfg
+ */
+
+/*
+ * Каждому контакту микроконтроллера ставится в соответствие уникальное
+ * число, имеющее также и символическое имя. Например, PA0, PC12 и т.д.
+ * Пользователь драйвера должен установить значения констант, обозначающих
+ * сигналы, в файле target.cfg своего проекта, в переменной CFLAGS.
+ * Например,
+ *     CFLAGS += -DSSP1RXD=PD11
+ * В коде драйвера можно препроцессором разобрать значение константы для
+ * сигнала и получить, к какому контакту пользователь привязал сигнал, и
+ * правильно проинициализировать контакт.
+ * Для примера см. драйвер SPI
+ */
+#define PORT_A  0
+#define PORT_B  1
+#define PORT_C  2
+#define PORT_D  3
+#define PORT_E  4
+#define PORT_F  5
+#define PORT_G  6
+#define PORT_H  7
+#define PORT_I  8
+
+#define STM32_PIN(port,pin)    (((port) << 4) | (pin))
+#define PORT(x)             (((x) >> 4) & 0xF)
+#define PIN(x)              ((x) & 0xF)
+
+#define PA0     STM32_PIN(PORT_A, 0)
+#define PA1     STM32_PIN(PORT_A, 1)
+#define PA2     STM32_PIN(PORT_A, 2)
+#define PA3     STM32_PIN(PORT_A, 3)
+#define PA4     STM32_PIN(PORT_A, 4)
+#define PA5     STM32_PIN(PORT_A, 5)
+#define PA6     STM32_PIN(PORT_A, 6)
+#define PA7     STM32_PIN(PORT_A, 7)
+#define PA8     STM32_PIN(PORT_A, 8)
+#define PA9     STM32_PIN(PORT_A, 9)
+#define PA10    STM32_PIN(PORT_A, 10)
+#define PA11    STM32_PIN(PORT_A, 11)
+#define PA12    STM32_PIN(PORT_A, 12)
+#define PA13    STM32_PIN(PORT_A, 13)
+#define PA14    STM32_PIN(PORT_A, 14)
+#define PA15    STM32_PIN(PORT_A, 15)
+
+#define PB0     STM32_PIN(PORT_B, 0)
+#define PB1     STM32_PIN(PORT_B, 1)
+#define PB2     STM32_PIN(PORT_B, 2)
+#define PB3     STM32_PIN(PORT_B, 3)
+#define PB4     STM32_PIN(PORT_B, 4)
+#define PB5     STM32_PIN(PORT_B, 5)
+#define PB6     STM32_PIN(PORT_B, 6)
+#define PB7     STM32_PIN(PORT_B, 7)
+#define PB8     STM32_PIN(PORT_B, 8)
+#define PB9     STM32_PIN(PORT_B, 9)
+#define PB10    STM32_PIN(PORT_B, 10)
+#define PB11    STM32_PIN(PORT_B, 11)
+#define PB12    STM32_PIN(PORT_B, 12)
+#define PB13    STM32_PIN(PORT_B, 13)
+#define PB14    STM32_PIN(PORT_B, 14)
+#define PB15    STM32_PIN(PORT_B, 15)
+
+#define PC0     STM32_PIN(PORT_C, 0)
+#define PC1     STM32_PIN(PORT_C, 1)
+#define PC2     STM32_PIN(PORT_C, 2)
+#define PC3     STM32_PIN(PORT_C, 3)
+#define PC4     STM32_PIN(PORT_C, 4)
+#define PC5     STM32_PIN(PORT_C, 5)
+#define PC6     STM32_PIN(PORT_C, 6)
+#define PC7     STM32_PIN(PORT_C, 7)
+#define PC8     STM32_PIN(PORT_C, 8)
+#define PC9     STM32_PIN(PORT_C, 9)
+#define PC10    STM32_PIN(PORT_C, 10)
+#define PC11    STM32_PIN(PORT_C, 11)
+#define PC12    STM32_PIN(PORT_C, 12)
+#define PC13    STM32_PIN(PORT_C, 13)
+#define PC14    STM32_PIN(PORT_C, 14)
+#define PC15    STM32_PIN(PORT_C, 15)
+
+#define PD0     STM32_PIN(PORT_D, 0)
+#define PD1     STM32_PIN(PORT_D, 1)
+#define PD2     STM32_PIN(PORT_D, 2)
+#define PD3     STM32_PIN(PORT_D, 3)
+#define PD4     STM32_PIN(PORT_D, 4)
+#define PD5     STM32_PIN(PORT_D, 5)
+#define PD6     STM32_PIN(PORT_D, 6)
+#define PD7     STM32_PIN(PORT_D, 7)
+#define PD8     STM32_PIN(PORT_D, 8)
+#define PD9     STM32_PIN(PORT_D, 9)
+#define PD10    STM32_PIN(PORT_D, 10)
+#define PD11    STM32_PIN(PORT_D, 11)
+#define PD12    STM32_PIN(PORT_D, 12)
+#define PD13    STM32_PIN(PORT_D, 13)
+#define PD14    STM32_PIN(PORT_D, 14)
+#define PD15    STM32_PIN(PORT_D, 15)
+
+#define PE0     STM32_PIN(PORT_E, 0)
+#define PE1     STM32_PIN(PORT_E, 1)
+#define PE2     STM32_PIN(PORT_E, 2)
+#define PE3     STM32_PIN(PORT_E, 3)
+#define PE4     STM32_PIN(PORT_E, 4)
+#define PE5     STM32_PIN(PORT_E, 5)
+#define PE6     STM32_PIN(PORT_E, 6)
+#define PE7     STM32_PIN(PORT_E, 7)
+#define PE8     STM32_PIN(PORT_E, 8)
+#define PE9     STM32_PIN(PORT_E, 9)
+#define PE10    STM32_PIN(PORT_E, 10)
+#define PE11    STM32_PIN(PORT_E, 11)
+#define PE12    STM32_PIN(PORT_E, 12)
+#define PE13    STM32_PIN(PORT_E, 13)
+#define PE14    STM32_PIN(PORT_E, 14)
+#define PE15    STM32_PIN(PORT_E, 15)
+
+#define PF0     STM32_PIN(PORT_F, 0)
+#define PF1     STM32_PIN(PORT_F, 1)
+#define PF2     STM32_PIN(PORT_F, 2)
+#define PF3     STM32_PIN(PORT_F, 3)
+#define PF4     STM32_PIN(PORT_F, 4)
+#define PF5     STM32_PIN(PORT_F, 5)
+#define PF6     STM32_PIN(PORT_F, 6)
+#define PF7     STM32_PIN(PORT_F, 7)
+#define PF8     STM32_PIN(PORT_F, 8)
+#define PF9     STM32_PIN(PORT_F, 9)
+#define PF10    STM32_PIN(PORT_F, 10)
+#define PF11    STM32_PIN(PORT_F, 11)
+#define PF12    STM32_PIN(PORT_F, 12)
+#define PF13    STM32_PIN(PORT_F, 13)
+#define PF14    STM32_PIN(PORT_F, 14)
+#define PF15    STM32_PIN(PORT_F, 15)
+
+#define PG0     STM32_PIN(PORT_G, 0)
+#define PG1     STM32_PIN(PORT_G, 1)
+#define PG2     STM32_PIN(PORT_G, 2)
+#define PG3     STM32_PIN(PORT_G, 3)
+#define PG4     STM32_PIN(PORT_G, 4)
+#define PG5     STM32_PIN(PORT_G, 5)
+#define PG6     STM32_PIN(PORT_G, 6)
+#define PG7     STM32_PIN(PORT_G, 7)
+#define PG8     STM32_PIN(PORT_G, 8)
+#define PG9     STM32_PIN(PORT_G, 9)
+#define PG10    STM32_PIN(PORT_G, 10)
+#define PG11    STM32_PIN(PORT_G, 11)
+#define PG12    STM32_PIN(PORT_G, 12)
+#define PG13    STM32_PIN(PORT_G, 13)
+#define PG14    STM32_PIN(PORT_G, 14)
+#define PG15    STM32_PIN(PORT_G, 15)
+
+#define PH0     STM32_PIN(PORT_H, 0)
+#define PH1     STM32_PIN(PORT_H, 1)
+#define PH2     STM32_PIN(PORT_H, 2)
+#define PH3     STM32_PIN(PORT_H, 3)
+#define PH4     STM32_PIN(PORT_H, 4)
+#define PH5     STM32_PIN(PORT_H, 5)
+#define PH6     STM32_PIN(PORT_H, 6)
+#define PH7     STM32_PIN(PORT_H, 7)
+#define PH8     STM32_PIN(PORT_H, 8)
+#define PH9     STM32_PIN(PORT_H, 9)
+#define PH10    STM32_PIN(PORT_H, 10)
+#define PH11    STM32_PIN(PORT_H, 11)
+#define PH12    STM32_PIN(PORT_H, 12)
+#define PH13    STM32_PIN(PORT_H, 13)
+#define PH14    STM32_PIN(PORT_H, 14)
+#define PH15    STM32_PIN(PORT_H, 15)
+
+#define PI0     STM32_PIN(PORT_I, 0)
+#define PI1     STM32_PIN(PORT_I, 1)
+#define PI2     STM32_PIN(PORT_I, 2)
+#define PI3     STM32_PIN(PORT_I, 3)
+#define PI4     STM32_PIN(PORT_I, 4)
+#define PI5     STM32_PIN(PORT_I, 5)
+#define PI6     STM32_PIN(PORT_I, 6)
+#define PI7     STM32_PIN(PORT_I, 7)
+#define PI8     STM32_PIN(PORT_I, 8)
+#define PI9     STM32_PIN(PORT_I, 9)
+#define PI10    STM32_PIN(PORT_I, 10)
+#define PI11    STM32_PIN(PORT_I, 11)
+#define PI12    STM32_PIN(PORT_I, 12)
+#define PI13    STM32_PIN(PORT_I, 13)
+#define PI14    STM32_PIN(PORT_I, 14)
+#define PI15    STM32_PIN(PORT_I, 15)
+
+
+#define stm32f4_alt_config_pin(port, pin, funk) {                                                       \
+	RCC->AHB1ENR |= (1 << PORT(pin));	/* Включение тактовой порта	*/								\
+	/* Настройка порта  */																			\
+	port->MODER = (port->MODER & ~GPIO_MODE_MASK(PIN(pin))) | GPIO_ALT(PIN(pin)); 					\
+	if (PIN(pin) < 8)																				\
+		port->AFRL = (port->AFRL & ~GPIO_AF_MASK(PIN(pin))) | funk;									\
+	else																							\
+		port->AFRH = (port->AFRH & ~GPIO_AF_MASK(PIN(pin))) | funk;									\
+	port->OSPEEDR |= GPIO_100MHz(PIN(pin));															\
+	port->OTYPER &= ~GPIO_OD(PIN(pin));																\
+	port->PUPDR &= ~GPIO_PULL_MASK(PIN(pin));														\
+}
+
+
+/* Сигнал UART1_TXD */
+#ifndef UART1_TX
+#define UART1_TX    PB6		/* PA9  */
+#endif
+
+#if ((PORT(UART1_TX)==PORT_A) && (PIN(UART1_TX) == 9))
+#   define UART1_TX_GPIO 	GPIOA
+#elif ((PORT(UART1_TX)==PORT_B) && (PIN(UART1_TX) == 6))
+#   define UART1_TX_GPIO 	GPIOB
+#else
+#   error "UART1_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART1_RXD */
+#ifndef UART1_RX
+#define UART1_RX	PB7		/* PA10 */
+#endif
+#if ((PORT(UART1_RX)==PORT_A) && (PIN(UART1_RX) == 10))
+#   define UART1_RX_GPIO 	GPIOA
+#elif ((PORT(UART1_RX)==PORT_B) && (PIN(UART1_RX) == 7))
+#   define UART1_RX_GPIO 	GPIOB
+#else
+#   error "UART1_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART2_TXD */
+#ifndef UART2_TX
+#define UART2_TX	PA2	/* PD5		 PA2 */
+#endif
+#if ((PORT(UART2_TX)==PORT_A) && (PIN(UART2_TX) == 2))
+#   define UART2_TX_GPIO 	GPIOA
+#elif ((PORT(UART2_TX)==PORT_D) && (PIN(UART2_TX) == 5))
+#   define UART2_TX_GPIO 	GPIOD
+#else
+#   error "UART2_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART2_RXD */
+#ifndef UART2_RX
+#define UART2_RX	PA3		/* PD6		 PA3 */
+#endif
+#if ((PORT(UART2_RX)==PORT_A) && (PIN(UART2_RX) == 3))
+#   define UART2_RX_GPIO 	GPIOA
+#elif ((PORT(UART2_RX)==PORT_D) && (PIN(UART2_RX) == 6))
+#   define UART2_RX_GPIO 	GPIOD
+#else
+#   error "UART2_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART3_TXD */
+#ifndef UART3_TX
+#define UART3_TX	PD8		/* PC10	 PB10  PD8*/
+#endif
+#if ((PORT(UART3_TX)==PORT_B) && (PIN(UART3_TX) == 10))
+#   define UART3_TX_GPIO 	GPIOB
+#elif ((PORT(UART3_TX)==PORT_C) && (PIN(UART3_TX) == 10))
+#   define UART3_TX_GPIO 	GPIOC
+#elif ((PORT(UART3_TX)==PORT_D) && (PIN(UART3_TX) == 8))
+#   define UART3_TX_GPIO 	GPIOD
+#else
+#   error "UART3_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART3_RXD */
+#ifndef UART3_RX
+#define UART3_RX	PD9		/* PC11  	PB11	PD9 */
+#endif
+#if ((PORT(UART3_RX)==PORT_B) && (PIN(UART3_RX) == 11))
+#   define UART3_RX_GPIO 	GPIOB
+#elif ((PORT(UART3_RX)==PORT_C) && (PIN(UART3_RX) == 11))
+#   define UART3_RX_GPIO 	GPIOC
+#elif ((PORT(UART3_RX)==PORT_D) && (PIN(UART3_RX) == 9))
+#   define UART3_RX_GPIO 	GPIOD
+#else
+#   error "UART3_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART4_TXD */
+#ifndef UART4_TX
+#define UART4_TX	PA0		/* PA0	 PC10	 */
+#endif
+#if ((PORT(UART4_TX)==PORT_A) && (PIN(UART4_TX) == 0))
+#   define UART4_TX_GPIO 	GPIOA
+#elif ((PORT(UART4_TX)==PORT_C)  && (PIN(UART4_TX) == 11))
+#   define UART4_TX_GPIO 	GPIOC
+#else
+#   error "UART4_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART4_RXD */
+#ifndef UART4_RX
+#define UART4_RX	PA1		/* PA1	 PC11  */
+#endif
+#if ((PORT(UART4_RX)==PORT_A) && (PIN(UART4_RX) == 1))
+#   define UART4_RX_GPIO 	GPIOA
+#elif ( (PORT(UART4_RX)==PORT_C) && (PIN(UART4_RX) == 11))
+#   define UART4_RX_GPIO 	GPIOC
+#else
+#   error "UART4_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART5_TXD */
+#ifndef UART5_TX
+#define UART5_TX	PC12
+#endif
+#if ((PORT(UART5_TX)==PORT_C) && (PIN(UART5_TX) == 12))
+#   define UART5_TX_GPIO 	GPIOC
+#else
+#   error "UART5_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART5_RXD */
+#ifndef UART5_RX
+#define UART5_RX	PD2
+#endif
+#if ((PORT(UART5_RX)==PORT_D)  && (PIN(UART5_RX) == 2))
+#   define UART5_RX_GPIO 	GPIOD
+#else
+#   error "UART5_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART6_TXD */
+#ifndef UART6_TX
+#define UART6_TX	PC6		/* PC6	 PG14	 */
+#endif
+#if ((PORT(UART6_TX)==PORT_C)  && (PIN(UART6_TX) == 6))
+#   define UART6_TX_GPIO 	GPIOC
+#elif ((PORT(UART6_TX)==PORT_G)  && (PIN(UART6_TX) == 14))
+#   define UART6_TX_GPIO 	GPIOG
+#else
+#   error "UART6_TX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* Сигнал UART6_RXD */
+#ifndef UART6_RX
+#define UART6_RX	PC7		/* PC7	 PG9  */
+#endif
+#if ((PORT(UART6_RX)==PORT_C) && (PIN(UART6_RX) == 7))
+#   define UART6_RX_GPIO 	GPIOC
+#elif ((PORT(UART6_RX)==PORT_G)  && (PIN(UART6_RX) == 9))
+#   define UART6_RX_GPIO 	GPIOG
+#else
+#   error "UART6_RX pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* SPI1_CSS  AF5*/
+#ifndef SPI1_CSS
+# define SPI1_CSS		PA4		/* PA15 */
+#endif
+
+#if ((PORT(SPI1_CSS)==PORT_A)  && (PIN(SPI1_CSS) == 4))
+#   define SPI1_CSS_GPIO 	GPIOA
+#elif ((PORT(SPI1_CSS)==PORT_A)  && (PIN(SPI1_CSS) == 15))
+#   define SPI1_CSS_GPIO 	GPIOA
+#else
+#   error "SPI1_CSS pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI1_CLK */
+#ifndef SPI1_CLK
+# define SPI1_CLK		PA5		/* PB3 */
+#endif
+
+#if ((PORT(SPI1_CLK)==PORT_A)  && (PIN(SPI1_CLK) == 5))
+#   define SPI1_CLK_GPIO 	GPIOA
+#elif ((PORT(SPI1_CLK)==PORT_B)  && (PIN(SPI1_CLK) == 3))
+#   define SPI1_CLK_GPIO 	GPIOB
+#else
+#   error "SPI1_CLK pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI1_MISO */
+#ifndef SPI1_MISO
+# define SPI1_MISO		PA6		/* PB4 */
+#endif
+
+#if ((PORT(SPI1_MISO)==PORT_A)  && (PIN(SPI1_MISO) == 6))
+#   define SPI1_MISO_GPIO 	GPIOA
+#elif ((PORT(SPI1_MISO)==PORT_B)  && (PIN(SPI1_MISO) == 4))
+#   define SPI1_MISO_GPIO 	GPIOB
+#else
+#   error "SPI1_MISO pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI1_MOSI */
+#ifndef SPI1_MOSI
+# define SPI1_MOSI		PA7		/* PB5 */
+#endif
+
+#if ((PORT(SPI1_MOSI)==PORT_A)  && (PIN(SPI1_MOSI) == 7))
+#   define SPI1_MOSI_GPIO 	GPIOA
+#elif ((PORT(SPI1_MOSI)==PORT_B)  && (PIN(SPI1_MOSI) == 5))
+#   define SPI1_MOSI_GPIO 	GPIOB
+#else
+#   error "SPI1_MOSI pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+
+/* SPI2_CSS  AF5*/
+#ifndef SPI2_CSS
+# define SPI2_CSS		PB9		/* PB12   PI0 */
+#endif
+
+#if ((PORT(SPI2_CSS)==PORT_B)  && (PIN(SPI2_CSS) == 9))
+#   define SPI2_CSS_GPIO 	GPIOB
+#elif ((PORT(SPI2_CSS)==PORT_B)  && (PIN(SPI2_CSS) == 12))
+#   define SPI2_CSS_GPIO 	GPIOB
+#elif ((PORT(SPI2_CSS)==PORT_I)  && (PIN(SPI2_CSS) == 0))
+#   define SPI2_CSS_GPIO 	GPIOI
+#else
+#   error "SPI2_CSS pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI2_CLK */
+#ifndef SPI2_CLK
+# define SPI2_CLK		PB10	/* PB13   PI1 */
+#endif
+
+#if ((PORT(SPI2_CLK)==PORT_B)  && (PIN(SPI2_CLK) == 10))
+#   define SPI2_CLK_GPIO 	GPIOB
+#elif ((PORT(SPI2_CLK)==PORT_B)  && (PIN(SPI2_CLK) == 13))
+#   define SPI2_CLK_GPIO 	GPIOB
+#elif ((PORT(SPI2_CLK)==PORT_I)  && (PIN(SPI2_CLK) == 1))
+#   define SPI2_CLK_GPIO 	GPIOI
+#else
+#   error "SPI2_CLK pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI2_MISO */
+#ifndef SPI2_MISO
+# define SPI2_MISO		PB14	/* PC2    PI2 */
+#endif
+
+#if ((PORT(SPI2_MISO)==PORT_B)  && (PIN(SPI2_MISO) == 14))
+#   define SPI2_MISO_GPIO 	GPIOB
+#elif ((PORT(SPI2_MISO)==PORT_C)  && (PIN(SPI2_MISO) == 2))
+#   define SPI2_MISO_GPIO 	GPIOC
+#elif ((PORT(SPI2_MISO)==PORT_I)  && (PIN(SPI2_MISO) == 2))
+#   define SPI2_MISO_GPIO 	GPIOI
+#else
+#   error "SPI2_MISO pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI2_MOSI */
+#ifndef SPI2_MOSI
+# define SPI2_MOSI		PB15	/* PC3    PI3 */
+#endif
+
+#if ((PORT(SPI2_MOSI)==PORT_B)  && (PIN(SPI2_MOSI) == 15))
+#   define SPI2_MOSI_GPIO 	GPIOB
+#elif ((PORT(SPI2_MOSI)==PORT_C)  && (PIN(SPI2_MOSI) == 3))
+#   define SPI2_MOSI_GPIO 	GPIOC
+#elif ((PORT(SPI2_MOSI)==PORT_I)  && (PIN(SPI2_MOSI) == 3))
+#   define SPI2_MOSI_GPIO 	GPIOI
+#else
+#   error "SPI2_MOSI pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+//////////
+/* SPI3_CSS  AF5*/
+#ifndef SPI3_CSS
+# define SPI3_CSS		PA4		/* PA15 */
+#endif
+
+#if ((PORT(SPI3_CSS)==PORT_A)  && (PIN(SPI3_CSS) == 4))
+#   define SPI3_CSS_GPIO 	GPIOA
+#elif ((PORT(SPI3_CSS)==PORT_A)  && (PIN(SPI3_CSS) == 15))
+#   define SPI3_CSS_GPIO 	GPIOA
+#else
+#   error "SPI3_CSS pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI3_CLK */
+#ifndef SPI3_CLK
+# define SPI3_CLK		PB3	/* PC10 */
+#endif
+
+#if ((PORT(SPI3_CLK)==PORT_B)  && (PIN(SPI3_CLK) == 3))
+#   define SPI3_CLK_GPIO 	GPIOB
+#elif ((PORT(SPI3_CLK)==PORT_C)  && (PIN(SPI3_CLK) == 10))
+#   define SPI3_CLK_GPIO 	GPIOC
+#else
+#   error "SPI3_CLK pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI3_MISO */
+#ifndef SPI3_MISO
+# define SPI3_MISO		PB4	/* PC11 */
+#endif
+
+#if ((PORT(SPI3_MISO)==PORT_B)  && (PIN(SPI3_MISO) == 4))
+#   define SPI3_MISO_GPIO 	GPIOB
+#elif ((PORT(SPI3_MISO)==PORT_C)  && (PIN(SPI3_MISO) == 11))
+#   define SPI3_MISO_GPIO 	GPIOC
+#else
+#   error "SPI3_MISO pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+
+/* SPI3_MOSI */
+#ifndef SPI3_MOSI
+# define SPI3_MOSI		PB5	/* PC12 */
+#endif
+
+#if ((PORT(SPI3_MOSI)==PORT_B)  && (PIN(SPI3_MOSI) == 5))
+#   define SPI3_MOSI_GPIO 	GPIOB
+#elif ((PORT(SPI3_MOSI)==PORT_C)  && (PIN(SPI3_MOSI) == 12))
+#   define SPI3_MOSI_GPIO 	GPIOC
+#else
+#   error "SPI3_MOSI pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C1_SCL */
+#ifndef I2C1_SCL
+# define I2C1_SCL		PB6 	/* PB8 */
+#endif
+#if ((PORT(I2C1_SCL)==PORT_B)  && (PIN(I2C1_SCL) == 6))
+#   define I2C1_SCL_GPIO 	GPIOB
+#elif ((PORT(I2C1_SCL)==PORT_B)  && (PIN(I2C1_SCL) == 8))
+#   define I2C1_SCL_GPIO 	GPIOB
+#else
+#   error "I2C1_SCL pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C1_SDA */
+#ifndef I2C1_SDA
+# define I2C1_SDA		PB7		/* PB9 */
+#endif
+#if ((PORT(I2C1_SDA)==PORT_B)  && (PIN(I2C1_SDA) == 7))
+#   define I2C1_SDA_GPIO 	GPIOB
+#elif ((PORT(I2C1_SDA)==PORT_B)  && (PIN(I2C1_SDA) == 9))
+#   define I2C1_SDA_GPIO 	GPIOB
+#else
+#   error "I2C1_SDA pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C2_SCL */
+#ifndef I2C2_SCL
+# define I2C2_SCL		PB10	/* PF1   PH4*/
+#endif
+#if ((PORT(I2C2_SCL)==PORT_B)  && (PIN(I2C2_SCL) == 10))
+#   define I2C2_SCL_GPIO 	GPIOB
+#elif ((PORT(I2C2_SCL)==PORT_F)  && (PIN(I2C2_SCL) == 1))
+#   define I2C2_SCL_GPIO 	GPIOF
+#elif ((PORT(I2C2_SCL)==PORT_H)  && (PIN(I2C2_SCL) == 4))
+#   define I2C2_SCL_GPIO 	GPIOH
+#else
+#   error "I2C2_SCL pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C2_SDA */
+#ifndef I2C2_SDA
+# define I2C2_SDA		PB11	/* PF0   PH5*/
+#endif
+#if ((PORT(I2C2_SDA)==PORT_B)  && (PIN(I2C2_SDA) == 11))
+#   define I2C2_SDA_GPIO 	GPIOB
+#elif ((PORT(I2C2_SDA)==PORT_F)  && (PIN(I2C2_SDA) == 0))
+#   define I2C2_SCL_GPIO 	GPIOF
+#elif ((PORT(I2C2_SDA)==PORT_H)  && (PIN(I2C2_SDA) == 5))
+#   define I2C2_SDA_GPIO 	GPIOH
+#else
+#   error "I2C2_SDA pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C3_SCL */
+#ifndef I2C3_SCL
+# define I2C3_SCL		PA8		/* PH7 */
+#endif
+#if ((PORT(I2C3_SCL)==PORT_A)  && (PIN(I2C3_SCL) == 8))
+#   define I2C3_SCL_GPIO 	GPIOA
+#elif ((PORT(I2C3_SCL)==PORT_H)  && (PIN(I2C3_SCL) == 7))
+#   define I2C3_SCL_GPIO 	GPIOH
+#else
+#   error "I2C3_SCL pin is not assigned in CFLAGS of target.cfg"
+#endif
+
+/* I2C3_SDA */
+#ifndef I2C3_SDA
+# define I2C3_SDA		PC10	/* PH8 */
+#endif
+#if ((PORT(I2C3_SDA)==PORT_C)  && (PIN(I2C3_SDA) == 10))
+#   define I2C3_SDA_GPIO 	GPIOC
+#elif ((PORT(I2C3_SDA)==PORT_H)  && (PIN(I2C3_SDA) == 8))
+#   define I2C3_SDA_GPIO 	GPIOH
+#else
+#   error "I2C3_SDA pin is not assigned in CFLAGS of target.cfg"
+#endif
 

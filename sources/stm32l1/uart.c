@@ -86,6 +86,7 @@ static bool_t clear_tx_dma_intr_flags(void *arg)
         DMA1->IFCR = DMA_CTEIF(2) | DMA_CTCIF(2);
         tx_irq = IRQ_DMA1_CHANNEL2;
         break;  
+#if defined(STM32L1_CAT3) || defined(STM32L1_CAT4) || defined(STM32L1_CAT5) || defined(STM32L1_CAT6)
     case 4:
         DMA2->IFCR = DMA_CTEIF(5) | DMA_CTCIF(5);
         tx_irq = IRQ_DMA2_CHANNEL5;
@@ -94,6 +95,7 @@ static bool_t clear_tx_dma_intr_flags(void *arg)
         DMA2->IFCR = DMA_CTEIF(1) | DMA_CTCIF(1);
         tx_irq = IRQ_DMA2_CHANNEL1;
         break;
+#endif
     default:
         break;
     }

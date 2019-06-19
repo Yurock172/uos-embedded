@@ -134,6 +134,19 @@ generator will not work properly
     unsigned frac = (KHZ / APB1_DIV / (115.2 * 16) - mant) * 16;
     RCC->APB1ENR |= RCC_USART2EN;
     usart = USART2;
+#elif defined(USE_USART1)
+//    RCC->AHB1ENR |= RCC_GPIOAEN;
+//    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODE_MASK(9) | GPIO_MODE_MASK(10))) |
+//    		GPIO_ALT(9) | GPIO_ALT(10);
+//    GPIOA->AFRH |= GPIO_AF_USART1(9) | GPIO_AF_USART1(10);
+    stm32f4_alt_config_pin(UART1_RX_GPIO, UART1_RX, GPIO_AF_USART1(PIN(UART1_RX)));
+    stm32f4_alt_config_pin(UART1_TX_GPIO, UART1_TX, GPIO_AF_USART1(PIN(UART1_TX)));
+
+    unsigned mant = (unsigned)(KHZ / APB2_DIV / (115.2 * 16));
+    unsigned frac = (KHZ / APB2_DIV / (115.2 * 16) - mant) * 16;
+    RCC->APB2ENR |= RCC_USART1EN;
+    usart = USART1;
+
 #else
     RCC->AHB1ENR |= RCC_GPIODEN;
     GPIOD->MODER |= GPIO_ALT(8) | GPIO_ALT(9);
@@ -180,6 +193,8 @@ uos_valid_memory_address (void *ptr)
 	unsigned u = (unsigned) ptr;
 
 	if (u >= ARM_SRAM_BASE && u < ARM_SRAM_BASE + ARM_SRAM_SIZE)
+		return 1;
+	if (u >= ARM_CCRAM_BASE && u < ARM_CCRAM_BASE + ARM_CCRAM_SIZE)
 		return 1;
 	return 0;
 }

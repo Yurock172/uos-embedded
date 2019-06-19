@@ -292,7 +292,7 @@ static bool_t error_handler(void *arg)
     stm32f4_i2c_t *stm32f4_i2c = arg;
     I2C_t *ireg = stm32f4_i2c->reg;
     const uint32_t sr1 = ireg->SR1;
-    int res = I2C_ERR_OK;
+//    int res = I2C_ERR_OK;
     
 
 //debug_printf("error_handler\n");
