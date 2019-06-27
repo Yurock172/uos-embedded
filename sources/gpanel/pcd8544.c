@@ -361,7 +361,6 @@ void gpanel_pixel (gpanel_t *gp, int x, int y, int color)
     else
         *data &= ~(1 << (y & 7));
 
-    // ToDo В старой версии я эти строки коментировал и обновлял экран сразу весь
     lcd_write (0x40 | (y >> 3), 0);
     lcd_write (0x80 | x, 0);
     lcd_write (*data, 1);
@@ -492,4 +491,9 @@ void gpanel_image (gpanel_t *gp, int x, int y, int width, int height,
     const unsigned short *data)
 {
     // TODO
+}
+
+/* выключение дисплея, перевод его в спящий режим */
+void gpanel_off(gpanel_t *lcd) {
+	// ToDo
 }

@@ -19,6 +19,8 @@
 #ifndef __GPIO_INTERFACE_H__
 #define __GPIO_INTERFACE_H__
 
+#include <kernel/uos.h>
+
 
 #define GPIO_EVENT_RISING_EDGE          (1 << 0)
 #define GPIO_EVENT_FALLING_EDGE         (1 << 1)

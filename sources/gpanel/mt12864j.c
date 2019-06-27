@@ -493,3 +493,7 @@ void gpanel_image(gpanel_t *gp, int x, int y, int width, int height,
 #endif
 }
 
+/* выключение дисплея, перевод его в спящий режим */
+void gpanel_off(gpanel_t *lcd) {
+	// ToDo
+}

@@ -86,6 +86,24 @@ void stm32l_low_power()
 
 void stm32l_init_sysclk()
 {
+//  /*!< Set MSION bit */
+//  RCC->CR |= RCC_MSION;
+//
+//  /*!< Reset SW[1:0], HPRE[3:0], PPRE1[2:0], PPRE2[2:0], MCOSEL[2:0] and MCOPRE[2:0] bits */
+//  RCC->CFGR &= (uint32_t)0x88FFC00C;
+//
+//  /*!< Reset HSION, HSEON, CSSON and PLLON bits */
+//  RCC->CR &= (uint32_t)0xEEFEFFFE;
+//
+//  /*!< Reset HSEBYP bit */
+//  RCC->CR &= (uint32_t)0xFFFBFFFF;
+//
+//  /*!< Reset PLLSRC, PLLMUL[3:0] and PLLDIV[1:0] bits */
+//  RCC->CFGR &= (uint32_t)0xFF02FFFF;
+//
+//  /*!< Disable all interrupt
+//   */
+
 #if defined(CLK_SOURCE_HSI)
 
     stm32l_enable_flash_prefetch();
@@ -202,15 +220,12 @@ _init_ (void)
 //#ifndef SLEEP_NOW
     stm32l_low_power();
     stm32l_disable_bor();
-//    PWR->CR = PWR_LPRUN | PWR_LPSDSR | PWR_ULP;
 //#endif
 #endif
 //#ifdef LOW_PWR_RAN
 //    PWR->CR |= PWR_LPRUN;
 //#endif
     stm32l_init_sysclk();
-//    GPIOA->BSRR = 1 << 6;
-
     // Init debug UART    
 #ifndef NDEBUG
 
