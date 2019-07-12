@@ -27,7 +27,7 @@ static inline int set_timings(I2C_t *reg, unsigned mode, unsigned khz)
 	    break;
 	case I2C_MODE_FM:
 	    if (khz > 100)
-	        reg->CCR = I2C_CCR(calc_ccr_sm(khz)) | I2C_DUTY | I2C_FS;
+	        reg->CCR = I2C_CCR(calc_ccr_fm(khz)) | I2C_DUTY | I2C_FS;
 	    else
 	        reg->CCR = I2C_CCR(calc_ccr_sm(khz)) | I2C_FS;
     	reg->TRISE = 300 * KHZ_PCLK1 / 1000000 + 1;
