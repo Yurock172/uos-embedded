@@ -140,6 +140,9 @@ debug_putchar (void *arg, short c)
 	arch_state_t x;
 
 	arm_intr_disable (&x);
+	unsigned oldCR = DBG_USART->CR1;
+	DBG_USART->CR1  = 0;
+	DBG_USART->CR1 |= USART_TE | USART_RE | USART_UE;
 
 	if (hook) {
 		hook (hook_arg, c);
@@ -164,6 +167,7 @@ again:
 		c = '\r';
 		goto again;
 	}
+	DBG_USART->CR1 = oldCR;
 	arm_intr_restore (x);
 }
 
@@ -235,7 +239,11 @@ debug_puts (const char *p)
 	arch_state_t x;
 
 	arm_intr_disable (&x);
+	unsigned oldCR = DBG_USART->CR1;
+	DBG_USART->CR1  = 0;
+	DBG_USART->CR1 |= USART_TE | USART_RE | USART_UE;
 	for (; *p; ++p)
 		debug_putchar (0, *p);
+	DBG_USART->CR1  = oldCR;
 	arm_intr_restore (x);
 }
