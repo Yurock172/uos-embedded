@@ -286,3 +286,11 @@ unsigned long *src, *dest, *limit;
 		*dest++ = 0;
 }
 
+static uint32_t inline __attribute__ ((always_inline)) __rbit(uint32_t value)
+{
+  uint32_t result;
+
+   asm volatile ("rbit %0, %1" : "=r" (result) : "r" (value) );
+   return(result);
+}
+
