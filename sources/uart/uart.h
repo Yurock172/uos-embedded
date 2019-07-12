@@ -11,7 +11,7 @@
 #   if __AVR__
 #      define UART_STACKSZ	0x100		/* 100 enough for AVR */
 #   endif
-#   if ARM_CORTEX_M1 || ARM_CORTEX_M3
+#   if defined (ARM_CORTEX_M1) || defined(ARM_CORTEX_M3)
 #      define UART_STACKSZ	1		/* unused */
 #   elif defined (__arm__) || defined (__thumb__)
 #      define UART_STACKSZ	0x200
@@ -55,7 +55,9 @@
  */
 typedef struct _uart_t {
 	stream_interface_t *interface;
+//#if !defined (ARM_CORTEX_M1) || !defined(ARM_CORTEX_M3)
 	mutex_t transmitter;
+//#endif
 	mutex_t receiver;
 	small_uint_t port;
 	bool_t onlcr;
