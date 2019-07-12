@@ -82,7 +82,7 @@ stm32l1_gpio_t pin_data;
 #define POINT_XMAX							96
 #define POINT_YMAX							68
 
-static unsigned char gpanel_screen [POINT_XMAX * POINT_YMAX / 8];
+static unsigned char gpanel_screen [MAX_ROW * MAX_COL];
 
 
 
@@ -105,22 +105,32 @@ static void lcd_write (uint8_t byte, unsigned data_flag) {
 	gpio_set_val(&pin_cs.gpioif, 0);		/* Slave select */
 
 	if (data_flag) {
-		gpio_set_val(&pin_data.gpioif, 1);
-	} else
-		gpio_set_val(&pin_data.gpioif, 0);
-	gpio_set_val(&pin_clk.gpioif, 1);
+//		gpio_set_val(&pin_data.gpioif, 1);
+		GPIOA->BSRR = GPIO_SET(LCD_SDA_PIN);
+	} else {
+//		gpio_set_val(&pin_data.gpioif, 0);
+	  GPIOA->BSRR = GPIO_RESET(LCD_SDA_PIN);
+	}
+//	gpio_set_val(&pin_clk.gpioif, 1);
+	GPIOA->BSRR = GPIO_SET(LCD_CLK_PIN);
 	for (uint32_t i = 0; i < 8; i++) {
-		gpio_set_val(&pin_clk.gpioif, 0);
-		if (byte & 0x80)
-			gpio_set_val(&pin_data.gpioif, 1);
-		else
-			gpio_set_val(&pin_data.gpioif, 0);
-		gpio_set_val(&pin_clk.gpioif, 1);
+//		gpio_set_val(&pin_clk.gpioif, 0);
+	  GPIOA->BSRR = GPIO_RESET(LCD_CLK_PIN);
+		if (byte & 0x80) {
+//			gpio_set_val(&pin_data.gpioif, 1);
+			GPIOA->BSRR = GPIO_SET(LCD_SDA_PIN);
+		}else {
+//			gpio_set_val(&pin_data.gpioif, 0);
+		  GPIOA->BSRR = GPIO_RESET(LCD_SDA_PIN);
+		}
+//		gpio_set_val(&pin_clk.gpioif, 1);
+		GPIOA->BSRR = GPIO_SET(LCD_CLK_PIN);
 		byte <<= 1;
 	}
 
 	gpio_set_val(&pin_cs.gpioif, 1);
-	gpio_set_val(&pin_clk.gpioif, 0);
+//	gpio_set_val(&pin_clk.gpioif, 0);
+	GPIOA->BSRR = GPIO_RESET(LCD_CLK_PIN);
 }
 
 static void lcd_go_to_xy(uint8_t x, uint8_t y) {
@@ -143,7 +153,7 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
 
     /* Clear data */
     // Set {0, 0}
-    lcd_write(COMMAND_DISPLAY_OFF, 0);
+#ifndef GPANEL_ALL_UPDATE
     for (i = 0; i < MAX_ROW; i++) {
     	lcd_go_to_xy(0, i);
     	for (j = 0; j < MAX_COL; j++) {
@@ -151,8 +161,7 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
     	}
     }
     lcd_go_to_xy(0, 0);
-
-    lcd_write(COMMAND_DISPLAY_ON, 0);
+#endif
 
     for (i = 0; i < POINT_XMAX * POINT_YMAX / 8; i++) {
     	gpanel_screen[i] = color;
@@ -169,7 +178,7 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
 void gpanel_init (gpanel_t *gp, const gpanel_font_t *font)
 {
     extern stream_interface_t gpanel_interface;
-    debug_printf("Init lsd ste2007\r\n");
+//    debug_printf("Init lsd ste2007\r\n");
 
     gp->interface = &gpanel_interface;
     gp->nrow = POINT_YMAX;
@@ -266,13 +275,12 @@ void gpanel_pixel (gpanel_t *gp, int x, int y, int color)
 	else
 		*data &= ~(1 << (y & 7));
 
-//	lcd_write (0x40 | (y >> 3), 0);
-//	lcd_write (0x80 | x, 0);
 	gpanel_move(gp, x, y);
-	lcd_go_to_xy(x, y >> 3);
-//	debug_printf("x = %d, y = %d\r\n", x, y);
 
+#ifndef GPANEL_ALL_UPDATE
+	lcd_go_to_xy(x, y >> 3);
 	lcd_write (*data, 1);
+#endif
 }
 
 
@@ -314,10 +322,12 @@ static void graw_glyph8 (gpanel_t *gp, unsigned width, unsigned height,
 
 	 /* Write graphics memory. */
 	 lcd_go_to_xy(gp->col, ypage);
-//	 debug_printf("lcd goto {%d, %d}\r\n", gp->col, ypage);
+
+#ifndef GPANEL_ALL_UPDATE
 	 for (x=0; x<width; x++) {
 		 lcd_write (data[x], 1);
 	 }
+#endif
 }
 
 
@@ -431,65 +441,15 @@ void gpanel_off(gpanel_t *lcd) {
 	lcd_write(COMMAND_DISPLAY_OFF, 0);
 }
 
-/*
+#ifdef GPANEL_ALL_UPDATE
+void gpanel_update(gpanel_t *lcd) {
+  lcd_go_to_xy(0, 0);
+  for (uint32_t i = 0; i < MAX_ROW; i++) {
+    lcd_go_to_xy(0, i);
+    for (uint32_t j = 0; j < POINT_XMAX; j++) {
+      lcd_write (gpanel_screen [i * POINT_XMAX + j], 1);
+    }
+  }
 
-void gpanel_line (gpanel_t *lcd, int x0, int y0, int x1, int y1, int color) {
-	signed char dx, dy, sx, sy;
-	unsigned char x, y, mdx, mdy, l;
-
-	dx = x1 - x0;
-	dy = y1 - y0;
-
-	if (dx >= 0) {
-		mdx = dx;
-		sx = 1;
-	} else {
-		mdx = x0 - x1;
-		sx = -1;
-	}
-	if (dy >= 0) {
-		mdy = dy;
-		sy = 1;
-	} else {
-		mdy = y0 - y1;
-		sy = -1;
-	}
-
-	x = x0;
-	y = y0;
-
-	if (mdx >= mdy) {
-		l = mdx;
-		while (l > 0) {
-			if (dy > 0) {
-				y = y0 + mdy * (x - x0) / mdx;
-			} else {
-				y = y0 - mdy * (x - x0) / mdx;
-			}
-			gpanel_pixel(lcd, x, y, color);
-			x = x + sx;
-			l--;
-		}
-	} else {
-		l = mdy;
-		while (l > 0) {
-			if (dy > 0) {
-				x = x0 + ((mdx * (y - y0)) / mdy);
-			} else {
-				x = x0 + ((mdx * (y0 - y)) / mdy);
-			}
-			gpanel_pixel(lcd, x, y, color);
-			y = y + sy;
-			l--;
-		}
-	}
-	gpanel_pixel(lcd, x1, y1, color);
 }
-
-void gpanel_rect (gpanel_t *lcd, int x0, int y0, int x1, int y1, int color) {
-	gpanel_line (lcd, x0, y0, x1, y0, color);
-	gpanel_line (lcd, x1, y0, x1, y1, color);
-	gpanel_line (lcd, x0, y0, x0, y1, color);
-	gpanel_line (lcd, x0, y1, x1, y1, color);
-}
-*/
+#endif

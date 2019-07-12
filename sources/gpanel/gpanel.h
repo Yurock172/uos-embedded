@@ -60,3 +60,7 @@ void gpanel_move (gpanel_t *lcd, int x, int y);
 void gpanel_color (gpanel_t *lcd, int fg, int bg);
 int gpanel_text_width (gpanel_t *lcd, const unsigned char *text);
 void gpanel_off(gpanel_t *lcd);
+#ifdef GPANEL_ALL_UPDATE
+void gpanel_update(gpanel_t *lcd);
+#endif
+
