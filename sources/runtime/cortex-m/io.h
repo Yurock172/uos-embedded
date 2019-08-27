@@ -203,24 +203,24 @@ arm_bus_yield ()
 	while (! (RCC->CR & RCC_MSIRDY));
 
 	RCC->CFGR = (RCC->CFGR & ~RCC_SW_MASK) | RCC_SW_MSI;
-    while ((RCC->CFGR & RCC_SWS_MASK) != RCC_SWS_MSI);
+	while ((RCC->CFGR & RCC_SWS_MASK) != RCC_SWS_MSI);
 
-    RCC->CR &= ~(RCC_HSION | RCC_HSEON | RCC_PLLON);
-    while (RCC->CR & (RCC_HSIRDY | RCC_HSERDY | RCC_PLLRDY));
+	RCC->CR &= ~(RCC_HSION | RCC_HSEON | RCC_PLLON);
+	while (RCC->CR & (RCC_HSIRDY | RCC_HSERDY | RCC_PLLRDY));
 
-    FLASH->ACR &= ~(FLASH_PRFTEN | FLASH_LATENCY(1));
-    while (FLASH->ACR & (FLASH_PRFTEN | FLASH_LATENCY(1)));
+	FLASH->ACR &= ~(FLASH_PRFTEN | FLASH_LATENCY(1));
+	while (FLASH->ACR & (FLASH_PRFTEN | FLASH_LATENCY(1)));
 
-    FLASH->ACR = 0;
+	FLASH->ACR = 0;
 	while (FLASH->ACR != 0);
-#endif
+#else
 	PWR->CR |= PWR_LPRUN;
 #endif
-//#ifndef LOW_PWR_RAN
+
+#endif
 	asm volatile (
 	"wfi"
 	: : : "memory", "cc");
-//#endif
 }
 
 /*

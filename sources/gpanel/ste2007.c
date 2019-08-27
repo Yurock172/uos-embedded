@@ -82,7 +82,7 @@ stm32l1_gpio_t pin_data;
 #define POINT_XMAX							96
 #define POINT_YMAX							68
 
-static unsigned char gpanel_screen [MAX_ROW * MAX_COL];
+static unsigned char gpanel_screen [POINT_XMAX * POINT_YMAX];
 
 
 
@@ -248,14 +248,15 @@ void gpanel_init (gpanel_t *gp, const gpanel_font_t *font)
     lcd_write (0xEB, 0);    // Thermal comp. on
     mdelay(3);
     lcd_write (DISPLAY_POWER_CONTROLL_SET | 0x7, 0);    // Supply mode
-    lcd_write (DISPLAY_COMMON_DIRECTION_REVERSE, 0);
-    lcd_write (DISPLAY_SEGMENT_DIRECTION_REVERSE, 0);    //
+    lcd_write (DISPLAY_COMMON_DIRECTION_REVERSE, 0);     // Переворот
+    lcd_write (DISPLAY_SEGMENT_DIRECTION_REVERSE, 0);    //  Зеркалит изображение
+    //
 
     lcd_write (COMMAND_DISPLAY_POINTS_OFF, 0);    // Clear screen
     lcd_write (COMMAND_DISPLAY_NORMAL, 0);    // Positive - A7, Negative - A6
     lcd_write(DISLPAY_ELECTRONIC_VOLUM | gp->contrast, 0);
     lcd_write(COMMAND_DISPLAY_ON, 0); 		// Enable LCD
-    lcd_bl (1);
+//    lcd_bl (1);
 }
 
 /*
@@ -439,6 +440,65 @@ void gpanel_image (gpanel_t *gp, int x, int y, int width, int height,
 void gpanel_off(gpanel_t *lcd) {
 	lcd_write(COMMAND_DISPLAY_POINTS_ON, 0);
 	lcd_write(COMMAND_DISPLAY_OFF, 0);
+}
+
+static void gpanel_pixel_invert (gpanel_t *gp, int x, int y)
+{
+  unsigned char *data;
+
+  if (x >= gp->ncol || y >= gp->nrow)
+    return;
+  data = &gpanel_screen [(y >> 3) * POINT_XMAX + x];
+
+  *data ^= 1 << (y & 7);
+//  if (color)
+//    *data |= 1 << (y & 7);
+//  else
+//    *data &= ~(1 << (y & 7));
+
+  gpanel_move(gp, x, y);
+
+#ifndef GPANEL_ALL_UPDATE
+  lcd_go_to_xy(x, y >> 3);
+  lcd_write (*data, 1);
+#endif
+}
+
+// Инвертирование цвета в прямоугольной области
+void gpanel_invert (gpanel_t *gp, int x0, int y0, int x1, int y1) {
+  /* Temporary solution */
+   int xmin, xmax, ymin, ymax, x, y;
+
+   /* calculate the min and max for x and y directions */
+   if (x0 <= x1) {
+     xmin = x0;
+     xmax = x1;
+   } else {
+     xmin = x1;
+     xmax = x0;
+   }
+   if (y0 <= y1) {
+     ymin = y0;
+     ymax = y1;
+   } else {
+     ymin = y1;
+     ymax = y0;
+   }
+   for (y=ymin; y<=ymax; y++)
+     for (x=xmin; x<=xmax; x++) // Линия по оси х
+       gpanel_pixel_invert (gp, x, y);
+}
+
+void gpanel_rotate (gpanel_t *lcd, int reverse) {
+  lcd_write(COMMAND_DISPLAY_OFF, 0);     // Disable LCD
+  if (reverse) {
+    lcd_write (DISPLAY_COMMON_DIRECTION_NORMAL, 0);
+    lcd_write (DISPLAY_SEGMENT_DIRECTION_NORMAL, 0);
+  } else {
+    lcd_write (DISPLAY_COMMON_DIRECTION_REVERSE, 0);
+    lcd_write (DISPLAY_SEGMENT_DIRECTION_REVERSE, 0);
+  }
+  lcd_write(COMMAND_DISPLAY_ON, 0);     // Enable LCD
 }
 
 #ifdef GPANEL_ALL_UPDATE

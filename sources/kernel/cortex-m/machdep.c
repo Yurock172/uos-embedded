@@ -130,7 +130,7 @@ _irq_handler_ (void)
 			stm32l_init_sysclk();
 		}
 		PWR->CR &= ~PWR_LPRUN;
-        PWR->CR |= PWR_CWUF;
+		PWR->CR |= PWR_CWUF;
 #	endif
 #endif
 

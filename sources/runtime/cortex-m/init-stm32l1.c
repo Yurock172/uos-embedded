@@ -80,29 +80,16 @@ void stm32l_low_power()
     RCC->CSR &= ~RCC_LSION;
     
     while (PWR->CSR & PWR_VOSF);
+#ifdef POWER_SAVE_CLK
+    PWR->CR = (PWR->CR & ~PWR_VOS_MASK) | PWR_VOS_1_2 | PWR_ULP | PWR_LPSDSR;
+#else
     PWR->CR = (PWR->CR & ~PWR_VOS_MASK) | PWR_VOS_1_8 | PWR_ULP | PWR_LPSDSR | PWR_FWU;
+#endif
     while (PWR->CSR & PWR_VOSF);
 }
 
 void stm32l_init_sysclk()
 {
-//  /*!< Set MSION bit */
-//  RCC->CR |= RCC_MSION;
-//
-//  /*!< Reset SW[1:0], HPRE[3:0], PPRE1[2:0], PPRE2[2:0], MCOSEL[2:0] and MCOPRE[2:0] bits */
-//  RCC->CFGR &= (uint32_t)0x88FFC00C;
-//
-//  /*!< Reset HSION, HSEON, CSSON and PLLON bits */
-//  RCC->CR &= (uint32_t)0xEEFEFFFE;
-//
-//  /*!< Reset HSEBYP bit */
-//  RCC->CR &= (uint32_t)0xFFFBFFFF;
-//
-//  /*!< Reset PLLSRC, PLLMUL[3:0] and PLLDIV[1:0] bits */
-//  RCC->CFGR &= (uint32_t)0xFF02FFFF;
-//
-//  /*!< Disable all interrupt
-//   */
 
 #if defined(CLK_SOURCE_HSI)
 
@@ -217,14 +204,9 @@ _init_ (void)
 // Disable interrupts
 	arm_set_basepri (64);
 #ifdef POWER_SAVE
-//#ifndef SLEEP_NOW
     stm32l_low_power();
     stm32l_disable_bor();
-//#endif
 #endif
-//#ifdef LOW_PWR_RAN
-//    PWR->CR |= PWR_LPRUN;
-//#endif
     stm32l_init_sysclk();
     // Init debug UART    
 #ifndef NDEBUG
@@ -247,6 +229,18 @@ _init_ (void)
     USART1->CR2 |= USART_STOP_1;
     USART1->BRR = USART_DIV_MANTISSA(mant) | USART_DIV_FRACTION(frac);
     USART1->CR1 |= USART_TE | USART_RE;
+#elif  defined USE_USART2
+#warning Using USART2
+    RCC->AHBENR |= RCC_GPIOAEN;
+    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODE_MASK(2) | GPIO_MODE_MASK(3))) |
+    GPIO_ALT(2) | GPIO_ALT(3);
+    GPIOA->AFRL |= GPIO_AF_USART2(2) | GPIO_AF_USART1(3);
+    RCC->APB1ENR |= RCC_USART2EN;
+    USART2->CR1 |= USART_UE;
+    USART2->CR2 |= USART_STOP_1;
+    USART2->BRR = USART_DIV_MANTISSA(mant) | USART_DIV_FRACTION(frac);
+    USART2->CR1 |= USART_TE | USART_RE;
+
 #else
 #warning Using USART3
     RCC->AHBENR |= RCC_GPIOCEN;

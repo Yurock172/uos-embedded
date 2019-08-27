@@ -1,6 +1,9 @@
 #include <loadable/uos-interface.h>
 #include "rtc.h"
 
+#define STM32_RTC_PRER_BITS         RTC_PRER(32,  1024)
+#define RTC_PRER(a, s)              ((((a) - 1) << 16) | ((s) - 1))
+
 extern uos_loadable_t *uos;
 
 static int stm32l1_get_time(rtcif_t *rtc, datetime_t *dt)
@@ -52,15 +55,30 @@ void stm32l1_rtc_init(stm32l1_rtc_t *stm_rtc)
 	rtc->get_time = stm32l1_get_time;
 	rtc->set_time = stm32l1_set_time;
 	
-	if (RCC->APB1ENR & RCC_PWREN)
+	if (RCC->APB1ENR & RCC_PWREN) {
 		return;
-    /* Clear write protection for RTC registers */
-    RCC->APB1ENR |= RCC_PWREN;
-    PWR->CR |= PWR_DBP;
-    RTC->WPR = 0xCA;
-    RTC->WPR = 0x53;
-    /* Enable LSE and set it as clock source for RTC */
-    RCC->CSR |= RCC_LSEON;
-    while (! (RCC->CSR & RCC_LSERDY));
-    RCC->CSR |= RCC_RTCEN | RCC_RTCSEL_LSE;
+	}
+	/* Clear write protection for RTC registers */
+	RCC->APB1ENR |= RCC_PWREN;
+	PWR->CR |= PWR_DBP;
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+	/* Enable LSE and set it as clock source for RTC */
+	RCC->CSR |= RCC_LSEON;
+	while (! (RCC->CSR & RCC_LSERDY))
+	  ;
+
+	RCC->CSR |= RCC_RTCEN | RCC_RTCSEL_LSE;
+
+	if (!(RTC->ISR & RTC_INITS)) {
+	  RTC->ISR |= RTC_INIT;
+	  while ((RTC->ISR & RTC_INITF) == 0)
+	    ;
+	  RTC->CR   = 0;
+	  RTC->ISR  = RTC_INIT;     /* Clearing all but RTC_ISR_INIT.   */
+	  RTC->PRER = STM32_RTC_PRER_BITS;
+	  RTC->PRER = STM32_RTC_PRER_BITS;
+
+	  RTC->ISR &= ~RTC_INIT;
+	}
 }

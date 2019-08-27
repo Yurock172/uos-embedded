@@ -108,7 +108,8 @@ arch_idle ()
 	arm_intr_enable ();
 	for (;;) {
 #ifdef POWER_SAVE
-//		ARM_SCB->SCR |= ARM_SCR_SLEEPDEEP;
+//		ARM_SCB->SCR |= ARM_SCR_SLEEPDEEP;  // Если есть эта строка, то мк засыпает наглухо
+
 		arm_bus_yield ();
 #else
 		asm volatile ("nop;");
