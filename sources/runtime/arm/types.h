@@ -21,6 +21,14 @@ typedef int small_int_t;
 typedef unsigned int small_uint_t;
 
 typedef int bool_t;
+typedef uint8_t bool;
+
+#define false 0
+#define true 1
+
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
 /*
  * An integer type, large enough to keep a memory address.

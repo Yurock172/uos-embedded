@@ -29,15 +29,15 @@ struct _milandr_gpio_t
     milandr_gpio_hndl_list_item_t hndl_item;
 };
 
-typedef enum
-{
-    GPIO_PORT_A,
-    GPIO_PORT_B,
-    GPIO_PORT_C,
-    GPIO_PORT_D,
-    GPIO_PORT_E,
-    GPIO_PORT_F
-} gpio_port_t;
+//typedef enum
+//{
+//    GPIO_PORT_A,
+//    GPIO_PORT_B,
+//    GPIO_PORT_C,
+//    GPIO_PORT_D,
+//    GPIO_PORT_E,
+//    GPIO_PORT_F
+//} gpio_port_t;
 
 // Ножка настраивается в режим порта
 #define GPIO_FLAGS_FUNC_PORT          0

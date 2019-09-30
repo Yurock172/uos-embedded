@@ -757,6 +757,7 @@ typedef struct
 #define GPIO_NO_PULL(n)   (0 << (2 * n))  // No pull-up, no pull-down
 #define GPIO_PULL_UP(n)   (1 << (2 * n))  // Pull-up
 #define GPIO_PULL_DOWN(n) (2 << (2 * n))  // Pull-down
+#define GPIO_PULL_MASK(n) (3 << (2 * n))  // mask
 
 // BSRR bits
 #define GPIO_SET(n)     (1 << (n))      // Atomic set n-th bit of ODR

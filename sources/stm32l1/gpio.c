@@ -1,7 +1,7 @@
 #include <loadable/uos-interface.h>
 #include "gpio.h"
 
-extern uos_loadable_t *uos;
+//extern uos_loadable_t *uos;
 
 enum {
     HANDLER_EXTI0,
@@ -20,8 +20,13 @@ static int handler_state;
 static list_t exti_hndl[HANDLER_MAX_NB];
 static mutex_t exti_mutex[HANDLER_MAX_NB];
 static const int irq_n[HANDLER_MAX_NB] = {
-    IRQ_EXTI0, IRQ_EXTI1, IRQ_EXTI2, IRQ_EXTI3, IRQ_EXTI4, 
-    IRQ_EXTI9_5, IRQ_EXTI15_10
+    IRQ_EXTI0,
+    IRQ_EXTI1,
+    IRQ_EXTI2,
+    IRQ_EXTI3,
+    IRQ_EXTI4,
+    IRQ_EXTI9_5,
+    IRQ_EXTI15_10
 };
 
 
@@ -234,7 +239,7 @@ static mutex_t *stm32l1_get_mutex(gpioif_t *pin)
     return &exti_mutex[stm_pin->irq_handler_idx];
 }
 
-void stm32l1_gpio_init(stm32l1_gpio_t *gpio, unsigned port, unsigned pin_n, 
+void stm32l1_gpio_init(stm32l1_gpio_t *gpio, unsigned port, unsigned pin_n,
         unsigned flags)
 {
     gpio->pin_n  = pin_n;
