@@ -148,9 +148,9 @@ generator will not work properly
     usart = USART1;
 
 #else
-    RCC->AHB1ENR |= RCC_GPIODEN;
-    GPIOD->MODER |= GPIO_ALT(8) | GPIO_ALT(9);
-    GPIOD->AFRH |= GPIO_AF_USART3(8) | GPIO_AF_USART3(9);
+    RCC->AHB1ENR |= RCC_GPIOCEN;
+    GPIOC->MODER |= GPIO_ALT(10) | GPIO_ALT(11);
+    GPIOC->AFRH |= GPIO_AF_USART3(10) | GPIO_AF_USART3(11);
     
     unsigned mant = (unsigned)(KHZ / APB1_DIV / (115.2 * 16));
     unsigned frac = (KHZ / APB1_DIV / (115.2 * 16) - mant) * 16;

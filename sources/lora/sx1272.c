@@ -1184,8 +1184,8 @@ void sx1272_set_sleep(radioif_t *radio) {
 
 void sx1272_set_stby(radioif_t *radio) {
   sx1272_t *sx = (sx1272_t *)radio;
-  timeout_start(&sx->rx_timeout);
-  timeout_start(&sx->tx_timeout);
+  timeout_stop(&sx->rx_timeout);
+  timeout_stop(&sx->tx_timeout);
 
   SX1272SetOpMode(sx, RF_OPMODE_STANDBY );
   sx->settings.state = RF_IDLE;
@@ -1367,6 +1367,7 @@ uint8_t sx1272_read(radioif_t *radio, uint8_t addr) {
 
 void sx1272_write_buffer(radioif_t *radio, uint8_t addr, uint8_t *buffer, uint8_t size) {
   sx1272_t *sx = (sx1272_t *)radio;
+  addr |= 0x80;
   sx->msg.tx_data = &addr;
   sx->msg.rx_data = 0;
   sx->msg.word_count = 1;
@@ -1498,6 +1499,7 @@ void timeout_hendler(void *arg) {
     mutex_wait(&sx->mutex_timeout);
     switch (sx->settings.state) {
     case RF_RX_RUNNING:
+      debug_printf("RF_RX_RUNNING\r\n");
       if (sx->settings.modem == MODEM_FSK) {
         sx->settings.fsk_packet_handler.preamble_detected = false;
         sx->settings.fsk_packet_handler.sync_word_detected = false;
@@ -1524,6 +1526,7 @@ void timeout_hendler(void *arg) {
       }
       break;
     case RF_TX_RUNNING:
+      debug_printf("RF_TX_RUNNING\r\n");
       sx->settings.state = RF_IDLE;
       if ((sx->events != NULL) && (sx->events->tx_timeout != NULL)) {
         sx->events->tx_timeout(radio);
