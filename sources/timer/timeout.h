@@ -143,6 +143,8 @@
 extern "C" {
 #endif
 
+#include "timer.h"
+
 typedef struct _timeout_t timeout_t;
 
 // Прототип функции-обработчика таймаута.
