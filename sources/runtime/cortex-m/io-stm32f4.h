@@ -1938,6 +1938,179 @@ typedef struct
 
 
 
+/*--------------------------------------------------------------------------
+ * Timers
+ */
+typedef struct {
+	arm_reg_t CR1; /*!< TIM control register 1,              Address offset: 0x00 */
+	arm_reg_t CR2; /*!< TIM control register 2,              Address offset: 0x04 */
+	arm_reg_t SMCR; /*!< TIM slave mode control register,     Address offset: 0x08 */
+	arm_reg_t DIER; /*!< TIM DMA/interrupt enable register,   Address offset: 0x0C */
+	arm_reg_t SR; /*!< TIM status register,                 Address offset: 0x10 */
+	arm_reg_t EGR; /*!< TIM event generation register,       Address offset: 0x14 */
+	arm_reg_t CCMR1; /*!< TIM capture/compare mode register 1, Address offset: 0x18 */
+	arm_reg_t CCMR2; /*!< TIM capture/compare mode register 2, Address offset: 0x1C */
+	arm_reg_t CCER; /*!< TIM capture/compare enable register, Address offset: 0x20 */
+	arm_reg_t CNT; /*!< TIM counter register,                Address offset: 0x24 */
+	arm_reg_t PSC; /*!< TIM prescaler,                       Address offset: 0x28 */
+	arm_reg_t ARR; /*!< TIM auto-reload register,            Address offset: 0x2C */
+	arm_reg_t RCR; /*!< TIM repetition counter register,     Address offset: 0x30 */
+	arm_reg_t CCR1; /*!< TIM capture/compare register 1,      Address offset: 0x34 */
+	arm_reg_t CCR2; /*!< TIM capture/compare register 2,      Address offset: 0x38 */
+	arm_reg_t CCR3; /*!< TIM capture/compare register 3,      Address offset: 0x3C */
+	arm_reg_t CCR4; /*!< TIM capture/compare register 4,      Address offset: 0x40 */
+	arm_reg_t BDTR; /*!< TIM break and dead-time register,    Address offset: 0x44 */
+	arm_reg_t DCR; /*!< TIM DMA control register,            Address offset: 0x48 */
+	arm_reg_t DMAR; /*!< TIM DMA address for full transfer,   Address offset: 0x4C */
+	arm_reg_t OR; /*!< TIM option register,                 Address offset: 0x50 */
+} TIM_t;
+
+#define TIM1	((TIM_t*) STM_TIM1_BASE)
+#define TIM2	((TIM_t*) STM_TIM2_BASE)
+#define TIM3	((TIM_t*) STM_TIM3_BASE)
+#define TIM4	((TIM_t*) STM_TIM4_BASE)
+#define TIM5	((TIM_t*) STM_TIM5_BASE)
+#define TIM6	((TIM_t*) STM_TIM6_BASE)
+#define TIM7	((TIM_t*) STM_TIM7_BASE)
+#define TIM8	((TIM_t*) STM_TIM8_BASE)
+#define TIM9	((TIM_t*) STM_TIM9_BASE)
+#define TIM10	((TIM_t*) STM_TIM10_BASE)
+#define TIM11	((TIM_t*) STM_TIM11_BASE)
+#define TIM12	((TIM_t*) STM_TIM12_BASE)
+#define TIM13	((TIM_t*) STM_TIM13_BASE)
+#define TIM14	((TIM_t*) STM_TIM14_BASE)
+
+// CR1
+#define TIM_CR1_EN				(1 << 0)            /*!<Counter enable        */
+#define  TIM_CR1_UDIS			((uint16_t)0x0002)            /*!<Update disable        */
+#define  TIM_CR1_URS			((uint16_t)0x0004)            /*!<Update request source */
+#define  TIM_CR1_OPM			((uint16_t)0x0008)            /*!<One pulse mode        */
+#define  TIM_CR1_DIR			((uint16_t)0x0010)            /*!<Direction             */
+
+#define TIM_OCMode_Timing                  ((uint16_t)0x0000)
+#define TIM_OCMode_Active                  ((uint16_t)0x0010)
+#define TIM_OCMode_Inactive                ((uint16_t)0x0020)
+#define TIM_OCMode_Toggle                  ((uint16_t)0x0030)
+#define TIM_OCMode_PWM1                    ((uint16_t)0x0060)
+#define TIM_OCMode_PWM2                    ((uint16_t)0x0070
+
+// CR
+#define TIM_CK_DIV4			(0b10 << 8)
+#define TIM_CK_DIV2			(0b01 << 8)
+#define TIM_CK_DIV1			(0b00 << 8)
+#define TIM_ARPE			(1 << 7)
+#define TIM_CMS(n)			((n) << 5)
+#define TIM_DIR_DWN			(1 << 4)
+#define TIM_OPM				(1 << 3)
+#define TIM_URS				(1 << 2)
+#define TIM_UDIS			(1 << 1)
+#define TIM_CEN				(1 << 0)
+
+// CR2
+#define TIM_TI1S			(1 << 7)
+#define TIM_MMS(n)			((n) << 4)
+#define TIM_CCDS			(1 << 2)
+
+// SMCR
+#define TIM_ETR_INV			(1 << 15)
+#define TIM_ECE				(1 << 14)
+#define TIM_EPS_1			(0b00 << 12)
+#define TIM_EPS_2			(0b01 << 12)
+#define TIM_EPS_4			(0b10 << 12)
+#define TIM_EPS_8			(0b11 << 12)
+#define TIM_ETF(n)			((n) << 8)
+#define TIM_MSM				(1 << 7)
+#define TIM_TS(n)			((n) << 4)
+#define TIM_OCCS			(1 << 3)
+#define TIM_SL_DIS			(0b000 << 0)
+#define TIM_ENCOD_MODE1		(0b001 << 0)
+#define TIM_ENCOD_MODE2		(0b010 << 0)
+#define TIM_ENCOD_MODE3		(0b011 << 0)
+#define TIM_RESET_MODE		(0b100 << 0)
+#define TIM_GATED_MODE		(0b101 << 0)
+#define TIM_TRIG_MODE		(0b110 << 0)
+#define TIM_EXT_CLK_MODE	(0b111 << 0)
+
+// SR
+#define TIM_CC4OF			(1 << 12)
+#define TIM_CC3OF			(1 << 11)
+#define TIM_CC2OF			(1 << 10)
+#define TIM_CC1OF			(1 << 9)
+#define TIM_TIF				(1 << 6)
+#define TIM_CC4IF			(1 << 4)
+#define TIM_CC3IF			(1 << 3)
+#define TIM_CC2IF			(1 << 2)
+#define TIM_CC1IF			(1 << 1)
+#define TIM_CUF				(1 << 0)
+
+// EGR
+#define TIM_TG				(1 << 6)
+#define TIM_CC4F			(1 << 5)
+#define TIM_CC3F			(1 << 4)
+#define TIM_CC2F			(1 << 3)
+#define TIM_CC1F			(1 << 2)
+#define TIM_UF				(1 << 1)
+
+// CCMR1
+
+#define TIM_IC2F(n)			((n) << 12)
+#define TIM_IC2PSC(n)		((n) << 10)
+
+#define TIM_OC2CE			(1 << 15)
+#define TIM_OC2M(n)			((n) << 12)
+#define TIM_OC2PE			(1 << 11)
+#define TIM_OC2FE			(1 << 10)
+#define TIM_CC2S(n)			((n) << 8)
+
+
+#define TIM_IC1F(n)			((n) << 4)
+#define TIM_IC1PSC(n)		((n) << 2)
+
+#define TIM_OC1CE			(1 << 7)
+#define TIM_OC1M(n)			((n) << 4)
+#define TIM_OC1PE			(1 << 3)
+#define TIM_OC1FE			(1 << 2)
+#define TIM_CC1S(n)			((n) << 0)
+
+// CCMR2
+#define TIM_IC4F(n)			((n) << 12)
+#define TIM_IC4PSC(n)		((n) << 10)
+
+#define TIM_OC4CE			(1 << 15)
+#define TIM_OC4M(n)			((n) << 12)
+#define TIM_OC4PE			(1 << 11)
+#define TIM_OC4FE			(1 << 10)
+#define TIM_CC4S(n)			((n) << 8)
+
+
+#define TIM_IC3F(n)			((n) << 4)
+#define TIM_IC3PSC(n)		((n) << 2)
+
+#define TIM_OC3CE			(1 << 7)
+#define TIM_OC3M(n)			((n) << 4)
+#define TIM_OC3PE			(1 << 3)
+#define TIM_OC3FE			(1 << 2)
+#define TIM_CC3S(n)			((n) << 0)
+
+#define TIM_CCMR_FROZEN			0b000
+#define TIM_CCMR_CH1_ACTIVE		0b001
+#define TIM_CCMR_CH1_INACTIVE	0b010
+#define TIM_CCMR_TOGLE			0b011
+#define TIM_CCMR_FORCE_INACT	0b100
+#define TIM_CCMR_FORCE_ACT		0b101
+#define TIM_CCMR_PWM1			0b110
+#define TIM_CCMR_PWM2			0b111
+
+// CCER
+#define TIM_CC4P			(1 << 13)
+#define TIM_CC4E			(1 << 12)
+#define TIM_CC3P			(1 << 9)
+#define TIM_CC3E			(1 << 8)
+#define TIM_CC2P			(1 << 5)
+#define TIM_CC2E			(1 << 4)
+#define TIM_CC1P			(1 << 1)
+#define TIM_CC1E			(1 << 0)
+
 
 /*------------------------------------------------------------------------
  * Макроопределения для возможности указания привязки сигналов к контактам

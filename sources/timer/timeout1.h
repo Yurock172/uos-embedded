@@ -160,8 +160,13 @@ struct _timeout_t
     timeout_handler handler;
     void *handler_arg;
 
+#if defined(USEC_TIMER) || defined(NSEC_TIMER)
+    unsigned long long interval;
+    long long cur_time;
+#else
     unsigned long interval;
-    unsigned long cur_time;
+    long cur_time;
+#endif
     
     int autoreload;
 };
@@ -198,7 +203,15 @@ void timeout_set_value (timeout_t *to, unsigned long interval_msec);
 // to               - объект таймаута;
 // interval_usec    - период в мкс.
 //
-void timeout_set_value_us (timeout_t *to, unsigned long interval_usec);
+void timeout_set_value_us (timeout_t *to, unsigned long long interval_usec);
+
+//
+// Установка периода таймаута в наносекундах.
+//
+// to               - объект таймаута;
+// interval_nsec    - период в нс.
+//
+void timeout_set_value_ns (timeout_t *to, unsigned long long interval_nsec);
 
 //
 // Установка параметра автоматического перезапуска таймаута.
@@ -231,8 +244,6 @@ void timeout_start (timeout_t *to);
 // to               - объект таймаута.
 //
 void timeout_stop (timeout_t *to);
-
-bool_t is_timeout_start(timeout_t *to);
 
 #ifdef __cplusplus
 }

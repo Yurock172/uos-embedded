@@ -135,10 +135,10 @@ generator will not work properly
     RCC->APB1ENR |= RCC_USART2EN;
     usart = USART2;
 #elif defined(USE_USART1)
-//    RCC->AHB1ENR |= RCC_GPIOAEN;
-//    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODE_MASK(9) | GPIO_MODE_MASK(10))) |
-//    		GPIO_ALT(9) | GPIO_ALT(10);
-//    GPIOA->AFRH |= GPIO_AF_USART1(9) | GPIO_AF_USART1(10);
+//    RCC->AHB1ENR |= RCC_GPIOBEN;
+//    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODE_MASK(6) | GPIO_MODE_MASK(7))) |
+//    		GPIO_ALT(4) | GPIO_ALT(7);
+//    GPIOB->AFRL |= GPIO_AF_USART1(6) | GPIO_AF_USART1(7);
     stm32f4_alt_config_pin(UART1_RX_GPIO, UART1_RX, GPIO_AF_USART1(PIN(UART1_RX)));
     stm32f4_alt_config_pin(UART1_TX_GPIO, UART1_TX, GPIO_AF_USART1(PIN(UART1_TX)));
 
