@@ -14,7 +14,7 @@
 #   if defined (ARM_CORTEX_M1) || defined(ARM_CORTEX_M3)
 #      define UART_STACKSZ	1		/* unused */
 #   elif defined (__arm__) || defined (__thumb__)
-#      define UART_STACKSZ	0x200
+#      define UART_STACKSZ	1
 #   endif
 #   if MIPS32
 #      define UART_STACKSZ	0x400
@@ -34,7 +34,7 @@
  * Размер буфера ввода.
  */
 #ifndef UART_INBUFSZ
-#define UART_INBUFSZ	8
+#define UART_INBUFSZ	128
 #endif
 
 /**\~english
@@ -44,7 +44,7 @@
  * Размер буфера вывода.
  */
 #ifndef UART_OUTBUFSZ
-#define UART_OUTBUFSZ	32
+#define UART_OUTBUFSZ	128
 #endif
 
 /**\~english

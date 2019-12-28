@@ -140,13 +140,12 @@ debug_putchar (void *arg, short c)
 	arch_state_t x;
 
 	arm_intr_disable (&x);
-	unsigned oldCR = DBG_USART->CR1;
-	DBG_USART->CR1  = 0;
-	DBG_USART->CR1 |= USART_TE | USART_RE | USART_UE;
+	unsigned oldCR1 = DBG_USART->CR1;
+	DBG_USART->CR1 = USART_TE | USART_RE | USART_UE;
 
 	if (hook) {
-		hook (hook_arg, c);
-		arm_intr_restore (x);
+	  hook (hook_arg, c);
+	  arm_intr_restore (x);
 		return;
 	}
 	/* Wait for transmitter holding register empty. */
@@ -167,7 +166,7 @@ again:
 		c = '\r';
 		goto again;
 	}
-	DBG_USART->CR1 = oldCR;
+	DBG_USART->CR1 = oldCR1;
 	arm_intr_restore (x);
 }
 
@@ -239,11 +238,10 @@ debug_puts (const char *p)
 	arch_state_t x;
 
 	arm_intr_disable (&x);
-	unsigned oldCR = DBG_USART->CR1;
-	DBG_USART->CR1  = 0;
-	DBG_USART->CR1 |= USART_TE | USART_RE | USART_UE;
+	unsigned oldCR1 = DBG_USART->CR1;
+	DBG_USART->CR1 = USART_TE | USART_RE | USART_UE;
 	for (; *p; ++p)
 		debug_putchar (0, *p);
-	DBG_USART->CR1  = oldCR;
+	DBG_USART->CR1  = oldCR1;
 	arm_intr_restore (x);
 }

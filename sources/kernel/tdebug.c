@@ -46,5 +46,5 @@ void task_print (stream_t *stream, task_t *t)
 			}
 		}
 	}
-	puts (stream, '\r\n');
+	puts (stream, "\r\n");
 }
