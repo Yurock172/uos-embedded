@@ -15,6 +15,7 @@
 #define USB_DESC_TYPE_OTHER_SPEED    0x07    // bDescriptorType for a other speed configuration.
 #define USB_DESC_TYPE_IFACE_POWER    0x08    // bDescriptorType for interface power.
 #define USB_DESC_TYPE_OTG            0x09    // bDescriptorType for an OTG descriptor.
+#define USB_DESC_TYPE_FUNCTIOMAL     0x24    // bDescriptorType for for CDC section.
 
 //
 // Attributes bits

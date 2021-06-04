@@ -59,7 +59,9 @@ static int stm32l1_uart_set_param(uartif_t *uart, unsigned params, unsigned byte
         uregs->CR2 |= USART_STOP_15;
         break;
     }
-    
+//    if (params & UART_CK_ENABLE)
+//    	uregs->CR2 |= (1 << 11);
+//    double brr = (KHZ * 1000) / (bytes_per_sec * 16);
     uregs->BRR = KHZ * 1000 / bytes_per_sec;
     uregs->CR1 = cr1 | USART_CR1_COMMON;
     

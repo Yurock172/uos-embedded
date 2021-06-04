@@ -53,7 +53,7 @@ stm32l1_gpio_t pin_data;
 #define COMMAND_DISPLAY_REVERSE				0xA7		/* Позитивное изображение */
 
 #define COMMAND_DISPLAY_POINTS_ON			0xA5		/* all points ON */
-#define COMMAND_DISPLAY_POINTS_OFF			0xA4		/* normal display */
+#define COMMAND_DISPLAY_POINTS_OFF		0xA4		/* normal display */
 
 #define DISPLAY_SET_PAGE_ADDRES				0xB0		/* Установка Y */
 #define DISPLAY_SET_COLUMN_ADDRES			0x10		/* Установка X */
@@ -66,14 +66,14 @@ stm32l1_gpio_t pin_data;
 #define DISPLAY_COMMON_DIRECTION_NORMAL		0xC0		/* Направление вывода нормальное */
 #define DISPLAY_COMMON_DIRECTION_REVERSE	0xC8		/* Направление вывода инверсное */
 
-#define DISPLAY_SELF_TEST					0xDB
+#define DISPLAY_SELF_TEST					      0xDB
 #define DISPLAY_POWER_CONTROLL_SET			0x28
-#define DISLPAY_VO_RANGE					0x20		/* контраст */
-#define DISLPAY_ELECTRONIC_VOLUM			0x80		/* Контраст */
+#define DISLPAY_VO_RANGE				      	0x20		/* контраст */
+#define DISLPAY_ELECTRONIC_VOLUM		   	0x80		/* Контраст */
 
-#define DISPLAY_INTERNAL_RESET				0xE2
-#define DISPLAY_NOP							0xE3
-#define COMMAND_DISPLAY_SET_VOP				0xE1		/* Сначала комманда, затем 8-ми битное значение */
+#define DISPLAY_INTERNAL_RESET				  0xE2
+#define DISPLAY_NOP							        0xE3
+#define COMMAND_DISPLAY_SET_VOP				  0xE1		/* Сначала комманда, затем 8-ми битное значение */
 #define COMMAND_TERMAL_COMPENSATION			0x38		/* Сначала комманда, следующая посылка с 3-х бинтым значением */
 
 #define MAX_ROW								9			/* x */
@@ -144,7 +144,7 @@ static void lcd_go_to_xy(uint8_t x, uint8_t y) {
  */
 void gpanel_clear (gpanel_t *gp, unsigned color)
 {
-    unsigned i, j;
+    unsigned i;
 
     if (color)
         color = 0xFF;
@@ -156,7 +156,7 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
 #ifndef GPANEL_ALL_UPDATE
     for (i = 0; i < MAX_ROW; i++) {
     	lcd_go_to_xy(0, i);
-    	for (j = 0; j < MAX_COL; j++) {
+    	for (unsigned j = 0; j < MAX_COL; j++) {
     		lcd_write (color, 1);
     	}
     }
@@ -171,7 +171,7 @@ void gpanel_clear (gpanel_t *gp, unsigned color)
 }
 
 /*
- * Set up hardware for communication to Nokia 5110 LCD Display.
+ * Set up hardware for communication to Nokia 1202 LCD Display.
  * Do not clear the display.
  * Leave backlight turned off.
  */
@@ -513,3 +513,4 @@ void gpanel_update(gpanel_t *lcd) {
 
 }
 #endif
+

@@ -207,6 +207,9 @@ _init_ (void)
     stm32l_low_power();
     stm32l_disable_bor();
 #endif
+    RCC->AHBENR |= RCC_GPIOAEN;
+    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODE_MASK(2) | GPIO_MODE_MASK(3) | GPIO_MODE_MASK(15))) |
+    		GPIO_ALT(2) | GPIO_ALT(3);
     stm32l_init_sysclk();
     // Init debug UART    
 #ifndef NDEBUG

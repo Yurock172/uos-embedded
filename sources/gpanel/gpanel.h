@@ -28,6 +28,11 @@ typedef struct {
 	unsigned c1, c2;		/* utf8 decoder */
 	volatile unsigned *volatile CMD;	/* command register */
 	volatile unsigned *volatile DATA;	/* data register */
+#ifdef LCD_SPI
+	void *spi;
+	void *led;
+	void *cd;
+#endif
 } gpanel_t;
 
 /* 12-bit color definitions */
@@ -43,7 +48,12 @@ typedef struct {
 #define GPANEL_ORANGE	0xFA0
 #define GPANEL_PINK	0xF6A
 
-void gpanel_init (gpanel_t *lcd, const gpanel_font_t *font);
+#ifdef LCD_SPI
+ void gpanel_init (gpanel_t *lcd, const gpanel_font_t *font, void *spi, void *led, void *cd);
+#else
+ void gpanel_init (gpanel_t *lcd, const gpanel_font_t *font);
+#endif
+
 void gpanel_backlight (gpanel_t *lcd, int on);
 void gpanel_contrast (gpanel_t *lcd, int contrast);
 void gpanel_pixel (gpanel_t *lcd, int x, int y, int color);

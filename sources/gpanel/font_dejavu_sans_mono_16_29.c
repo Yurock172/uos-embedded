@@ -89,7 +89,7 @@ static const unsigned short bigdigits_bits2[] = {
 		// horiz  gap = 3
 		// vertic gap = 11
 		// ofcet 33
-
+//    111000001100000111000000
 		0x0000, 0x0000 ,
 		0x0000, 0x0000 ,
 		0x03F0, 0x0000 , //       ******

@@ -128,5 +128,51 @@ typedef struct __attribute__ ((packed)) _usb_setup_pkt_t
     uint16_t wLength;               // Depends on bRequest.
 } usb_setup_pkt_t;
 
+//
+// Header Functional Descriptor (CDC section 5.2.3)
+//
+typedef struct __attribute__ ((packed)) _usb_func_pkt_t
+{
+    uint8_t  bLength;               // Length of this descriptor.
+    uint8_t  bDescriptorType;       // Device Functional descriptor type (must be CS_INTERFACE).
+    uint8_t  bDescriptorSubtype;    // Header Functional Descriptor
+    uint16_t bcdCDC;                // bcdCDC
+} usb_func_desc_t;
+
+//
+// Call Management Functional Descriptor
+//
+typedef struct __attribute__ ((packed)) _usb_call_pkt_t
+{
+    uint8_t  bFunctionLength;               // Length of this descriptor.
+    uint8_t  bDescriptorType;       // Device Functional descriptor type (must be CS_INTERFACE).
+    uint8_t  bDescriptorSubtype;    // Header Functional Descriptor
+    uint8_t  bmCapabilities;        // (D0+D1)
+    uint8_t  bDataInterface;        //
+} usb_call_desc_t;
+
+//
+// ACM Functional Descripto
+//
+typedef struct __attribute__ ((packed)) _usb_acm_pkt_t
+{
+    uint8_t  bFunctionLength;               // Length of this descriptor.
+    uint8_t  bDescriptorType;       // Device Functional descriptor type (must be CS_INTERFACE).
+    uint8_t  bDescriptorSubtype;    // Header Functional Descriptor
+    uint8_t  bmCapabilities;        // (D0+D1)
+} usb_acm_desc_t;
+
+//
+// Union Functional Descriptor
+//
+typedef struct __attribute__ ((packed)) _usb_union_pkt_t
+{
+    uint8_t  bFunctionLength;       // Length of this descriptor.
+    uint8_t  bDescriptorType;       // Device Functional descriptor type (must be CS_INTERFACE).
+    uint8_t  bDescriptorSubtype;    // Header Functional Descriptor
+    uint8_t  bMasterInterface;      // Communication Class Interface
+    uint8_t  bSlaveInterface0;      // Data Class Interface
+} usb_union_desc_t;
+
 
 #endif

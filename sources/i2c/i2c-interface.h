@@ -200,7 +200,7 @@ struct _i2c_transaction_t
 };
 
 // Макросы для задания адреса ведомого устройства и режима передачи
-#define I2C_MODE_SLAVE_ADDR(x)      (x)             // Адрес ведомого
+#define I2C_MODE_SLAVE_ADDR(x)      (x)             // Адрес ведомого, адрес из 8 бит
 #define I2C_MODE_GET_SLAVE_ADDR(r)  ((r) & 0x3FF)   // Получение адреса из поля mode
 #define I2C_MODE_7BIT_ADDR          (0 << 10)       // 7-битный адрес (по умолчанию)
 #define I2C_MODE_10BIT_ADDR         (1 << 10)       // 10-битный адрес

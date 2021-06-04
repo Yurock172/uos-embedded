@@ -68,6 +68,8 @@
 #define UART_PARITY_MASK        (0xF << 4)  // маска для полей контроля чётности
 #define UART_STOP_MASK          (0xF << 8)  // маска для кол-ва стоп-бит
 
+#define UART_CK_ENABLE			(1 << 12)	// Включить вывод CK
+
 
 typedef struct _uartif_t uartif_t;
 
